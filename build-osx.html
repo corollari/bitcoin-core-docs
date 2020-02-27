@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>build-osx</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="macos-build-instructions-and-notes">macOS Build Instructions and Notes</h1>
+<p>The commands in this guide should be executed in a Terminal application. The built-in one is located in</p>
+<pre><code>/Applications/Utilities/Terminal.app
+</code></pre>
+<h2 id="preparation">Preparation</h2>
+<p>Install the macOS command line tools:</p>
+<pre class="shell"><code>xcode-select --install
+</code></pre>
+<p>When the popup appears, click <code>Install</code>.</p>
+<p>Then install <a href="https://brew.sh">Homebrew</a>.</p>
+<h2 id="dependencies">Dependencies</h2>
+<pre class="shell"><code>brew install automake berkeley-db4 libtool boost miniupnpc pkg-config python qt libevent qrencode
+</code></pre>
+<p>If you run into issues, check <a href="https://docs.brew.sh/Troubleshooting">Homebrew's troubleshooting page</a>. See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
+<p>If you want to build the disk image with <code>make deploy</code> (.dmg / optional), you need RSVG:</p>
+<pre class="shell"><code>brew install librsvg
+</code></pre>
+<h2 id="berkeley-db">Berkeley DB</h2>
+<p>It is recommended to use Berkeley DB 4.8. If you have to build it yourself, you can use <a href="/contrib/install_db4.sh">this</a> script to install it like so:</p>
+<pre class="shell"><code>./contrib/install_db4.sh .
+</code></pre>
+<p>from the root of the repository.</p>
+<p><strong>Note</strong>: You only need Berkeley DB if the wallet is enabled (see <a href="/doc/build-osx.html#disable-wallet-mode"><em>Disable-wallet mode</em></a>).</p>
+<h2 id="build-bitcoin-core">Build Bitcoin Core</h2>
+<ol>
+<li><p>Clone the Bitcoin Core source code:</p>
+<pre class="shell"><code>git clone https://github.com/bitcoin/bitcoin
+cd bitcoin
+</code></pre></li>
+<li><p>Build Bitcoin Core:</p>
+<p>Configure and build the headless Bitcoin Core binaries as well as the GUI (if Qt is found).</p>
+<p>You can disable the GUI build by passing <code>--without-gui</code> to configure.</p>
+<pre class="shell"><code>./autogen.sh
+./configure
+make
+</code></pre></li>
+<li><p>It is recommended to build and run the unit tests:</p>
+<pre class="shell"><code>make check
+</code></pre></li>
+<li><p>You can also create a <code>.dmg</code> that contains the <code>.app</code> bundle (optional):</p>
+<pre class="shell"><code>make deploy
+</code></pre></li>
+</ol>
+<h2 id="disable-wallet-mode"><code>disable-wallet</code> mode</h2>
+<p>When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in <code>disable-wallet</code> mode with:</p>
+<pre class="shell"><code>./configure --disable-wallet
+</code></pre>
+<p>In this case there is no dependency on Berkeley DB 4.8.</p>
+<p>Mining is also possible in disable-wallet mode using the <code>getblocktemplate</code> RPC call.</p>
+<h2 id="running">Running</h2>
+<p>Bitcoin Core is now available at <code>./src/bitcoind</code></p>
+<p>Before running, you may create an empty configuration file:</p>
+<pre class="shell"><code>mkdir -p &quot;/Users/${USER}/Library/Application Support/Bitcoin&quot;
+
+touch &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&quot;
+
+chmod 600 &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&quot;
+</code></pre>
+<p>The first time you run bitcoind, it will start downloading the blockchain. This process could take many hours, or even days on slower than average systems.</p>
+<p>You can monitor the download process by looking at the debug.log file:</p>
+<pre class="shell"><code>tail -f $HOME/Library/Application\ Support/Bitcoin/debug.log
+</code></pre>
+<h2 id="other-commands">Other commands:</h2>
+<pre class="shell"><code>./src/bitcoind -daemon      # Starts the bitcoin daemon.
+./src/bitcoin-cli --help    # Outputs a list of command-line options.
+./src/bitcoin-cli help      # Outputs a list of RPC commands when the daemon is running.
+</code></pre>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>Tested on OS X 10.12 Sierra through macOS 10.15 Catalina on 64-bit Intel processors only.</li>
+<li>Building with downloaded Qt binaries is not officially supported. See the notes in <a href="https://github.com/bitcoin/bitcoin/issues/7714">#7714</a>.</li>
+</ul>
+</body>
+</html>

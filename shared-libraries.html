@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>shared-libraries</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="shared-libraries">Shared Libraries</h1>
+<h2 id="bitcoinconsensus">bitcoinconsensus</h2>
+<p>The purpose of this library is to make the verification functionality that is critical to Bitcoin's consensus available to other applications, e.g. to language bindings.</p>
+<h3 id="api">API</h3>
+<p>The interface is defined in the C header <code>bitcoinconsensus.h</code> located in <code>src/script/bitcoinconsensus.h</code>.</p>
+<h4 id="version">Version</h4>
+<p><code>bitcoinconsensus_version</code> returns an <code>unsigned int</code> with the API version <em>(currently <code>1</code>)</em>.</p>
+<h4 id="script-validation">Script Validation</h4>
+<p><code>bitcoinconsensus_verify_script</code> returns an <code>int</code> with the status of the verification. It will be <code>1</code> if the input script correctly spends the previous output <code>scriptPubKey</code>.</p>
+<h5 id="parameters">Parameters</h5>
+<ul>
+<li><code>const unsigned char *scriptPubKey</code> - The previous output script that encumbers spending.</li>
+<li><code>unsigned int scriptPubKeyLen</code> - The number of bytes for the <code>scriptPubKey</code>.</li>
+<li><code>const unsigned char *txTo</code> - The transaction with the input that is spending the previous output.</li>
+<li><code>unsigned int txToLen</code> - The number of bytes for the <code>txTo</code>.</li>
+<li><code>unsigned int nIn</code> - The index of the input in <code>txTo</code> that spends the <code>scriptPubKey</code>.</li>
+<li><code>unsigned int flags</code> - The script validation flags <em>(see below)</em>.</li>
+<li><code>bitcoinconsensus_error* err</code> - Will have the error/success code for the operation <em>(see below)</em>.</li>
+</ul>
+<h5 id="script-flags">Script Flags</h5>
+<ul>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NONE</code></li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_P2SH</code> - Evaluate P2SH (<a href="https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki">BIP16</a>) subscripts</li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_DERSIG</code> - Enforce strict DER (<a href="https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki">BIP66</a>) compliance</li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY</code> - Enforce NULLDUMMY (<a href="https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki">BIP147</a>)</li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY</code> - Enable CHECKLOCKTIMEVERIFY (<a href="https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki">BIP65</a>)</li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY</code> - Enable CHECKSEQUENCEVERIFY (<a href="https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki">BIP112</a>)</li>
+<li><code>bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS</code> - Enable WITNESS (<a href="https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki">BIP141</a>)</li>
+</ul>
+<h5 id="errors">Errors</h5>
+<ul>
+<li><code>bitcoinconsensus_ERR_OK</code> - No errors with input parameters <em>(see the return value of <code>bitcoinconsensus_verify_script</code> for the verification status)</em></li>
+<li><code>bitcoinconsensus_ERR_TX_INDEX</code> - An invalid index for <code>txTo</code></li>
+<li><code>bitcoinconsensus_ERR_TX_SIZE_MISMATCH</code> - <code>txToLen</code> did not match with the size of <code>txTo</code></li>
+<li><code>bitcoinconsensus_ERR_DESERIALIZE</code> - An error deserializing <code>txTo</code></li>
+<li><code>bitcoinconsensus_ERR_AMOUNT_REQUIRED</code> - Input amount is required if WITNESS is used</li>
+</ul>
+<h3 id="example-implementations">Example Implementations</h3>
+<ul>
+<li><a href="https://github.com/NicolasDorier/NBitcoin/blob/master/NBitcoin/Script.cs#L814">NBitcoin</a> (.NET Bindings)</li>
+<li><a href="https://github.com/bitpay/node-libbitcoinconsensus">node-libbitcoinconsensus</a> (Node.js Bindings)</li>
+<li><a href="https://github.com/dexX7/java-libbitcoinconsensus">java-libbitcoinconsensus</a> (Java Bindings)</li>
+<li><a href="https://github.com/Bit-Wasp/bitcoinconsensus-php">bitcoinconsensus-php</a> (PHP Bindings)</li>
+</ul>
+</body>
+</html>

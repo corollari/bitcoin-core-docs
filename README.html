@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="bitcoin-core">Bitcoin Core</h1>
+<h2 id="setup">Setup</h2>
+<p>Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.</p>
+<p>To download Bitcoin Core, visit <a href="https://bitcoincore.org/en/download/">bitcoincore.org</a>.</p>
+<h2 id="running">Running</h2>
+<p>The following are some helpful notes on how to run Bitcoin Core on your native platform.</p>
+<h3 id="unix">Unix</h3>
+<p>Unpack the files into a directory and run:</p>
+<ul>
+<li><code>bin/bitcoin-qt</code> (GUI) or</li>
+<li><code>bin/bitcoind</code> (headless)</li>
+</ul>
+<h3 id="windows">Windows</h3>
+<p>Unpack the files into a directory, and then run bitcoin-qt.exe.</p>
+<h3 id="macos">macOS</h3>
+<p>Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.</p>
+<h3 id="need-help">Need Help?</h3>
+<ul>
+<li>See the documentation at the <a href="https://en.bitcoin.it/wiki/Main_Page">Bitcoin Wiki</a> for help and more information.</li>
+<li>Ask for help on <a href="http://webchat.freenode.net?channels=bitcoin">#bitcoin</a> on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net?channels=bitcoin">webchat here</a>.</li>
+<li>Ask for help on the <a href="https://bitcointalk.org/">BitcoinTalk</a> forums, in the <a href="https://bitcointalk.org/index.php?board=4.0">Technical Support board</a>.</li>
+</ul>
+<h2 id="building">Building</h2>
+<p>The following are developer notes on how to build Bitcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.</p>
+<ul>
+<li><a href="dependencies.html">Dependencies</a></li>
+<li><a href="build-osx.html">macOS Build Notes</a></li>
+<li><a href="build-unix.html">Unix Build Notes</a></li>
+<li><a href="build-windows.html">Windows Build Notes</a></li>
+<li><a href="build-freebsd.html">FreeBSD Build Notes</a></li>
+<li><a href="build-openbsd.html">OpenBSD Build Notes</a></li>
+<li><a href="build-netbsd.html">NetBSD Build Notes</a></li>
+<li><a href="https://github.com/bitcoin-core/docs/blob/master/gitian-building.html">Gitian Building Guide (External Link)</a></li>
+</ul>
+<h2 id="development">Development</h2>
+<p>The Bitcoin repo's <a href="/README.html">root README</a> contains relevant information on the development process and automated testing.</p>
+<ul>
+<li><a href="developer-notes.html">Developer Notes</a></li>
+<li><a href="productivity.html">Productivity Notes</a></li>
+<li><a href="release-notes.html">Release Notes</a></li>
+<li><a href="release-process.html">Release Process</a></li>
+<li><a href="https://doxygen.bitcoincore.org/">Source Code Documentation (External Link)</a></li>
+<li><a href="translation_process.html">Translation Process</a></li>
+<li><a href="translation_strings_policy.html">Translation Strings Policy</a></li>
+<li><a href="JSON-RPC-interface.html">JSON-RPC Interface</a></li>
+<li><a href="REST-interface.html">Unauthenticated REST Interface</a></li>
+<li><a href="shared-libraries.html">Shared Libraries</a></li>
+<li><a href="bips.html">BIPS</a></li>
+<li><a href="dnsseed-policy.html">Dnsseed Policy</a></li>
+<li><a href="benchmarking.html">Benchmarking</a></li>
+</ul>
+<h3 id="resources">Resources</h3>
+<ul>
+<li>Discuss on the <a href="https://bitcointalk.org/">BitcoinTalk</a> forums, in the <a href="https://bitcointalk.org/index.php?board=6.0">Development &amp; Technical Discussion board</a>.</li>
+<li>Discuss project-specific development on #bitcoin-core-dev on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net/?channels=bitcoin-core-dev">webchat here</a>.</li>
+<li>Discuss general Bitcoin development on #bitcoin-dev on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net/?channels=bitcoin-dev">webchat here</a>.</li>
+</ul>
+<h3 id="miscellaneous">Miscellaneous</h3>
+<ul>
+<li><a href="assets-attribution.html">Assets Attribution</a></li>
+<li><a href="bitcoin-conf.html">bitcoin.conf Configuration File</a></li>
+<li><a href="files.html">Files</a></li>
+<li><a href="fuzzing.html">Fuzz-testing</a></li>
+<li><a href="reduce-memory.html">Reduce Memory</a></li>
+<li><a href="reduce-traffic.html">Reduce Traffic</a></li>
+<li><a href="tor.html">Tor Support</a></li>
+<li><a href="init.html">Init Scripts (syst.html/upstart/openrc)</a></li>
+<li><a href="zmq.html">ZMQ</a></li>
+<li><a href="psbt.html">PSBT support</a></li>
+</ul>
+<h2 id="license">License</h2>
+<p>Distributed under the <a href="/COPYING">MIT software license</a>.</p>
+</body>
+</html>

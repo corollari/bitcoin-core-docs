@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>developer-notes</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="developer-notes">Developer Notes</h1>
+<!-- markdown-toc start -->
+
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#developer-notes">Developer Notes</a>
+<ul>
+<li><a href="#coding-style-general">Coding Style (General)</a></li>
+<li><a href="#coding-style-c">Coding Style (C++)</a></li>
+<li><a href="#coding-style-python">Coding Style (Python)</a></li>
+<li><a href="#coding-style-doxygen-compatible-comments">Coding Style (Doxygen-compatible comments)</a>
+<ul>
+<li><a href="#generating-documentation">Generating Documentation</a></li>
+</ul></li>
+<li><a href="#development-tips-and-tricks">Development tips and tricks</a>
+<ul>
+<li><a href="#compiling-for-debugging">Compiling for debugging</a></li>
+<li><a href="#compiling-for-gprof-profiling">Compiling for gprof profiling</a></li>
+<li><a href="#debuglog"><code>debug.log</code></a></li>
+<li><a href="#testnet-and-regtest-modes">Testnet and Regtest modes</a></li>
+<li><a href="#debug_lockorder">DEBUG_LOCKORDER</a></li>
+<li><a href="#valgrind-suppressions-file">Valgrind suppressions file</a></li>
+<li><a href="#compiling-for-test-coverage">Compiling for test coverage</a></li>
+<li><a href="#performance-profiling-with-perf">Performance profiling with perf</a></li>
+<li><a href="#sanitizers">Sanitizers</a></li>
+</ul></li>
+<li><a href="#lockingmutex-usage-notes">Locking/mutex usage notes</a></li>
+<li><a href="#threads">Threads</a></li>
+<li><a href="#ignoring-ideeditor-files">Ignoring IDE/editor files</a></li>
+</ul></li>
+<li><a href="#development-guidelines">Development guidelines</a>
+<ul>
+<li><a href="#general-bitcoin-core">General Bitcoin Core</a></li>
+<li><a href="#wallet">Wallet</a></li>
+<li><a href="#general-c">General C++</a></li>
+<li><a href="#c-data-structures">C++ data structures</a></li>
+<li><a href="#strings-and-formatting">Strings and formatting</a></li>
+<li><a href="#shadowing">Shadowing</a></li>
+<li><a href="#threads-and-synchronization">Threads and synchronization</a></li>
+<li><a href="#scripts">Scripts</a>
+<ul>
+<li><a href="#shebang">Shebang</a></li>
+</ul></li>
+<li><a href="#source-code-organization">Source code organization</a></li>
+<li><a href="#gui">GUI</a></li>
+<li><a href="#subtrees">Subtrees</a></li>
+<li><a href="#upgrading-leveldb">Upgrading LevelDB</a>
+<ul>
+<li><a href="#file-descriptor-counts">File Descriptor Counts</a></li>
+<li><a href="#consensus-compatibility">Consensus Compatibility</a></li>
+</ul></li>
+<li><a href="#scripted-diffs">Scripted diffs</a>
+<ul>
+<li><a href="#suggestions-and-examples">Suggestions and examples</a></li>
+</ul></li>
+<li><a href="#release-notes">Release notes</a></li>
+<li><a href="#rpc-interface-guidelines">RPC interface guidelines</a></li>
+</ul></li>
+</ul>
+<!-- markdown-toc end -->
+
+<h2 id="coding-style-general">Coding Style (General)</h2>
+<p>Various coding styles have been used during the history of the codebase, and the result is not very consistent. However, we're now trying to converge to a single style, which is specified below. When writing patches, favor the new style over attempting to mimic the surrounding style, except for move-only commits.</p>
+<p>Do not submit patches solely to modify the style of existing code.</p>
+<h2 id="coding-style-c">Coding Style (C++)</h2>
+<ul>
+<li><p><strong>Indentation and whitespace rules</strong> as specified in <a href="/src/.clang-format">src/.clang-format</a>. You can use the provided <a href="/contrib/devtools/README.html#clang-format-diffpy">clang-format-diff script</a> tool to clean up patches automatically before submission.</p>
+<ul>
+<li>Braces on new lines for classes, functions, methods.</li>
+<li>Braces on the same line for everything else.</li>
+<li>4 space indentation (no tabs) for every block except namespaces.</li>
+<li>No indentation for <code>public</code>/<code>protected</code>/<code>private</code> or for <code>namespace</code>.</li>
+<li>No extra spaces inside parenthesis; don't do <code>( this )</code>.</li>
+<li>No space after function names; one space after <code>if</code>, <code>for</code> and <code>while</code>.</li>
+<li>If an <code>if</code> only has a single-statement <code>then</code>-clause, it can appear on the same line as the <code>if</code>, without braces. In every other case, braces are required, and the <code>then</code> and <code>else</code> clauses must appear correctly indented on a new line.</li>
+</ul></li>
+<li><p><strong>Symbol naming conventions</strong>. These are preferred in new code, but are not required when doing so would need changes to significant pieces of existing code.</p>
+<ul>
+<li>Variable (including function arguments) and namespace names are all lowercase and may use <code>_</code> to separate words (snake_case).
+<ul>
+<li>Class member variables have a <code>m_</code> prefix.</li>
+<li>Global variables have a <code>g_</code> prefix.</li>
+</ul></li>
+<li>Compile-time constant names are all uppercase, and use <code>_</code> to separate words.</li>
+<li>Class names, function names, and method names are UpperCamelCase (PascalCase). Do not prefix class names with <code>C</code>.</li>
+<li>Test suite naming convention: The Boost test suite in file <code>src/test/foo_tests.cpp</code> should be named <code>foo_tests</code>. Test suite names must be unique.</li>
+</ul></li>
+<li><p><strong>Miscellaneous</strong></p>
+<ul>
+<li><code>++i</code> is preferred over <code>i++</code>.</li>
+<li><code>nullptr</code> is preferred over <code>NULL</code> or <code>(void*)0</code>.</li>
+<li><code>static_assert</code> is preferred over <code>assert</code> where possible. Generally; compile-time checking is preferred over run-time checking.</li>
+</ul></li>
+</ul>
+<p>Block style example:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb1-1" title="1"><span class="dt">int</span> <span class="va">g_count</span> = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb1-2" title="2"></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">namespace</span> foo {</a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="kw">class</span> Class</a>
+<a class="sourceLine" id="cb1-5" title="5">{</a>
+<a class="sourceLine" id="cb1-6" title="6">    <span class="bu">std::</span>string <span class="va">m_name</span>;</a>
+<a class="sourceLine" id="cb1-7" title="7"></a>
+<a class="sourceLine" id="cb1-8" title="8"><span class="kw">public</span>:</a>
+<a class="sourceLine" id="cb1-9" title="9">    <span class="dt">bool</span> Function(<span class="at">const</span> <span class="bu">std::</span>string&amp; s, <span class="dt">int</span> n)</a>
+<a class="sourceLine" id="cb1-10" title="10">    {</a>
+<a class="sourceLine" id="cb1-11" title="11">        <span class="co">// Comment summarising what this section of code does</span></a>
+<a class="sourceLine" id="cb1-12" title="12">        <span class="cf">for</span> (<span class="dt">int</span> i = <span class="dv">0</span>; i &lt; n; ++i) {</a>
+<a class="sourceLine" id="cb1-13" title="13">            <span class="dt">int</span> total_sum = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb1-14" title="14">            <span class="co">// When something fails, return early</span></a>
+<a class="sourceLine" id="cb1-15" title="15">            <span class="cf">if</span> (!Something()) <span class="cf">return</span> <span class="kw">false</span>;</a>
+<a class="sourceLine" id="cb1-16" title="16">            ...</a>
+<a class="sourceLine" id="cb1-17" title="17">            <span class="cf">if</span> (SomethingElse(i)) {</a>
+<a class="sourceLine" id="cb1-18" title="18">                total_sum += ComputeSomething(<span class="va">g_count</span>);</a>
+<a class="sourceLine" id="cb1-19" title="19">            } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb1-20" title="20">                DoSomething(<span class="va">m_name</span>, total_sum);</a>
+<a class="sourceLine" id="cb1-21" title="21">            }</a>
+<a class="sourceLine" id="cb1-22" title="22">        }</a>
+<a class="sourceLine" id="cb1-23" title="23"></a>
+<a class="sourceLine" id="cb1-24" title="24">        <span class="co">// Success return is usually at the end</span></a>
+<a class="sourceLine" id="cb1-25" title="25">        <span class="cf">return</span> <span class="kw">true</span>;</a>
+<a class="sourceLine" id="cb1-26" title="26">    }</a>
+<a class="sourceLine" id="cb1-27" title="27">}</a>
+<a class="sourceLine" id="cb1-28" title="28">} <span class="co">// namespace foo</span></a></code></pre></div>
+<h2 id="coding-style-python">Coding Style (Python)</h2>
+<p>Refer to <a href="/test/functional/README.html#style-guidelines">/test/functional/README.html#style-guidelines</a>.</p>
+<h2 id="coding-style-doxygen-compatible-comments">Coding Style (Doxygen-compatible comments)</h2>
+<p>Bitcoin Core uses <a href="http://www.doxygen.nl/">Doxygen</a> to generate its official documentation.</p>
+<p>Use Doxygen-compatible comment blocks for functions, methods, and fields.</p>
+<p>For example, to describe a function use:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1"><span class="co">/**</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="co"> * ... Description ...</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="co"> *</span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="co"> * </span><span class="an">@param[in]</span><span class="co">  </span><span class="cv">arg1</span><span class="co"> input description...</span></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="co"> * </span><span class="an">@param[in]</span><span class="co">  </span><span class="cv">arg2</span><span class="co"> input description...</span></a>
+<a class="sourceLine" id="cb2-6" title="6"><span class="co"> * </span><span class="an">@param[out]</span><span class="co"> </span><span class="cv">arg3</span><span class="co"> output description...</span></a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="co"> * </span><span class="an">@return</span><span class="co"> Return cases...</span></a>
+<a class="sourceLine" id="cb2-8" title="8"><span class="co"> * </span><span class="an">@throws</span><span class="co"> </span><span class="cv">Error</span><span class="co"> type and cases...</span></a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="co"> * </span><span class="an">@pre</span><span class="co">  Pre-condition for function...</span></a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="co"> * </span><span class="an">@post</span><span class="co"> Post-condition for function...</span></a>
+<a class="sourceLine" id="cb2-11" title="11"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb2-12" title="12"><span class="dt">bool</span> function(<span class="dt">int</span> arg1, <span class="at">const</span> <span class="dt">char</span> *arg2, <span class="bu">std::</span>string&amp; arg3)</a></code></pre></div>
+<p>A complete list of <code>@xxx</code> commands can be found at <a href="http://www.doxygen.nl/manual/commands.html">http://www.doxygen.nl/manual/commands.html</a>. As Doxygen recognizes the comments by the delimiters (<code>/**</code> and <code>*/</code> in this case), you don't <em>need</em> to provide any commands for a comment to be valid; just a description text is fine.</p>
+<p>To describe a class, use the same construct above the class definition:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb3-1" title="1"><span class="co">/**</span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="co"> * Alerts are for notifying old versions if they become too obsolete and</span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="co"> * need to upgrade. The message is displayed in the status bar.</span></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="co"> * </span><span class="an">@see</span><span class="co"> GetWarnings()</span></a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="co"> */</span></a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="kw">class</span> CAlert</a></code></pre></div>
+<p>To describe a member or variable use:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb4-1" title="1"><span class="co">//! Description before the member</span></a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="dt">int</span> var;</a></code></pre></div>
+<p>or</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb5-1" title="1"><span class="dt">int</span> var; <span class="co">//!&lt; Description after the member</span></a></code></pre></div>
+<p>Also OK:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb6-1" title="1"><span class="co">///</span></a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="co">/// ... Description ...</span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="co">///</span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="dt">bool</span> function2(<span class="dt">int</span> arg1, <span class="at">const</span> <span class="dt">char</span> *arg2)</a></code></pre></div>
+<p>Not picked up by Doxygen:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb7-1" title="1"><span class="co">//</span></a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="co">// ... Description ...</span></a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="co">//</span></a></code></pre></div>
+<p>Also not picked up by Doxygen:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb8-1" title="1"><span class="co">/*</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="co"> * ... Description ...</span></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="co"> */</span></a></code></pre></div>
+<p>A full list of comment syntaxes picked up by Doxygen can be found at <a href="http://www.doxygen.nl/manual/docblocks.html">http://www.doxygen.nl/manual/docblocks.html</a>, but the above styles are favored.</p>
+<p>Recommendations:</p>
+<ul>
+<li><p>Avoiding duplicating type and input/output information in function descriptions.</p></li>
+<li><p>Use backticks (``) to refer to <code>argument</code> names in function and parameter descriptions.</p></li>
+<li><p>Backticks aren't required when referring to functions Doxygen already knows about; it will build hyperlinks for these automatically. See <a href="http://www.doxygen.nl/manual/autolink.html">http://www.doxygen.nl/manual/autolink.html</a> for complete info.</p></li>
+<li><p>Avoid linking to external documentation; links can break.</p></li>
+<li><p>Javadoc and all valid Doxygen comments are stripped from Doxygen source code previews (<code>STRIP_CODE_COMMENTS = YES</code> in <a href="doc/Doxyfile.in">Doxyfile.in</a>). If you want a comment to be preserved, it must instead use <code>//</code> or <code>/* */</code>.</p></li>
+</ul>
+<h3 id="generating-documentation">Generating Documentation</h3>
+<p>The documentation can be generated with <code>make docs</code> and cleaned up with <code>make clean-docs</code>. The resulting files are located in <code>doc/doxygen/html</code>; open <code>index.html</code> in that directory to view the homepage.</p>
+<p>Before running <code>make docs</code>, you'll need to install these dependencies:</p>
+<p>Linux: <code>sudo apt install doxygen graphviz</code></p>
+<p>MacOS: <code>brew install doxygen graphviz</code></p>
+<h2 id="development-tips-and-tricks">Development tips and tricks</h2>
+<h3 id="compiling-for-debugging">Compiling for debugging</h3>
+<p>Run configure with <code>--enable-debug</code> to add additional compiler flags that produce better debugging builds.</p>
+<h3 id="compiling-for-gprof-profiling">Compiling for gprof profiling</h3>
+<p>Run configure with the <code>--enable-gprof</code> option, then make.</p>
+<h3 id="debuglog"><code>debug.log</code></h3>
+<p>If the code is behaving strangely, take a look in the <code>debug.log</code> file in the data directory; error and debugging messages are written there.</p>
+<p>The <code>-debug=...</code> command-line option controls debugging; running with just <code>-debug</code> or <code>-debug=1</code> will turn on all categories (and give you a very large <code>debug.log</code> file).</p>
+<p>The Qt code routes <code>qDebug()</code> output to <code>debug.log</code> under category "qt": run with <code>-debug=qt</code> to see it.</p>
+<h3 id="testnet-and-regtest-modes">Testnet and Regtest modes</h3>
+<p>Run with the <code>-testnet</code> option to run with "play bitcoins" on the test network, if you are testing multi-machine code that needs to operate across the internet.</p>
+<p>If you are testing something that can run on one machine, run with the <code>-regtest</code> option. In regression test mode, blocks can be created on-demand; see <a href="/test/functional">test/functional/</a> for tests that run in <code>-regtest</code> mode.</p>
+<h3 id="debug_lockorder">DEBUG_LOCKORDER</h3>
+<p>Bitcoin Core is a multi-threaded application, and deadlocks or other multi-threading bugs can be very difficult to track down. The <code>--enable-debug</code> configure option adds <code>-DDEBUG_LOCKORDER</code> to the compiler flags. This inserts run-time checks to keep track of which locks are held and adds warnings to the <code>debug.log</code> file if inconsistencies are detected.</p>
+<h3 id="valgrind-suppressions-file">Valgrind suppressions file</h3>
+<p>Valgrind is a programming tool for memory debugging, memory leak detection, and profiling. The repo contains a Valgrind suppressions file (<a href="https://github.com/bitcoin/bitcoin/blob/master/contrib/valgrind.supp"><code>valgrind.supp</code></a>) which includes known Valgrind warnings in our dependencies that cannot be fixed in-tree. Example use:</p>
+<pre class="shell"><code>$ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
+$ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
+$ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+</code></pre>
+<h3 id="compiling-for-test-coverage">Compiling for test coverage</h3>
+<p>LCOV can be used to generate a test coverage report based upon <code>make check</code> execution. LCOV must be installed on your system (e.g. the <code>lcov</code> package on Debian/Ubuntu).</p>
+<p>To enable LCOV report generation during test runs:</p>
+<pre class="shell"><code>./configure --enable-lcov
+make
+make cov
+
+# A coverage report will now be accessible at `./test_bitcoin.coverage/index.html`.
+</code></pre>
+<h3 id="performance-profiling-with-perf">Performance profiling with perf</h3>
+<p>Profiling is a good way to get a precise idea of where time is being spent in code. One tool for doing profiling on Linux platforms is called <a href="http://www.brendangregg.com/perf.html"><code>perf</code></a>, and has been integrated into the functional test framework. Perf can observe a running process and sample (at some frequency) where its execution is.</p>
+<p>Perf installation is contingent on which kernel version you're running; see <a href="https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-tool">this thread</a> for specific instructions.</p>
+<p>Certain kernel parameters may need to be set for perf to be able to inspect the running process's stack.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb11-1" title="1">$ <span class="fu">sudo</span> sysctl -w kernel.perf_event_paranoid=-1</a>
+<a class="sourceLine" id="cb11-2" title="2">$ <span class="fu">sudo</span> sysctl -w kernel.kptr_restrict=0</a></code></pre></div>
+<p>Make sure you <a href="https://lwn.net/Articles/420403/">understand the security trade-offs</a> of setting these kernel parameters.</p>
+<p>To profile a running bitcoind process for 60 seconds, you could use an invocation of <code>perf record</code> like this:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb12-1" title="1">$ <span class="ex">perf</span> record \</a>
+<a class="sourceLine" id="cb12-2" title="2">    -g --call-graph dwarf --per-thread -F 140 \</a>
+<a class="sourceLine" id="cb12-3" title="3">    -p <span class="kw">`</span><span class="ex">pgrep</span> bitcoind<span class="kw">`</span> -- sleep 60</a></code></pre></div>
+<p>You could then analyze the results by running:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb13-1" title="1"><span class="ex">perf</span> report --stdio <span class="kw">|</span> <span class="ex">c++filt</span> <span class="kw">|</span> <span class="fu">less</span></a></code></pre></div>
+<p>or using a graphical tool like <a href="https://github.com/KDAB/hotspot">Hotspot</a>.</p>
+<p>See the functional test documentation for how to invoke perf within tests.</p>
+<h3 id="sanitizers">Sanitizers</h3>
+<p>Bitcoin Core can be compiled with various "sanitizers" enabled, which add instrumentation for issues regarding things like memory safety, thread race conditions, or undefined behavior. This is controlled with the <code>--with-sanitizers</code> configure flag, which should be a comma separated list of sanitizers to enable. The sanitizer list should correspond to supported <code>-fsanitize=</code> options in your compiler. These sanitizers have runtime overhead, so they are most useful when testing changes or producing debugging builds.</p>
+<p>Some examples:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb14-1" title="1"><span class="co"># Enable both the address sanitizer and the undefined behavior sanitizer</span></a>
+<a class="sourceLine" id="cb14-2" title="2"><span class="ex">./configure</span> --with-sanitizers=address,undefined</a>
+<a class="sourceLine" id="cb14-3" title="3"></a>
+<a class="sourceLine" id="cb14-4" title="4"><span class="co"># Enable the thread sanitizer</span></a>
+<a class="sourceLine" id="cb14-5" title="5"><span class="ex">./configure</span> --with-sanitizers=thread</a></code></pre></div>
+<p>If you are compiling with GCC you will typically need to install corresponding "san" libraries to actually compile with these flags, e.g. libasan for the address sanitizer, libtsan for the thread sanitizer, and libubsan for the undefined sanitizer. If you are missing required libraries, the configure script will fail with a linker error when testing the sanitizer flags.</p>
+<p>The test suite should pass cleanly with the <code>thread</code> and <code>undefined</code> sanitizers, but there are a number of known problems when using the <code>address</code> sanitizer. The address sanitizer is known to fail in <a href="/src/crypto/sha256_sse4.cpp">sha256_sse4::Transform</a> which makes it unusable unless you also use <code>--disable-asm</code> when running configure. We would like to fix sanitizer issues, so please send pull requests if you can fix any errors found by the address sanitizer (or any other sanitizer).</p>
+<p>Not all sanitizer options can be enabled at the same time, e.g. trying to build with <code>--with-sanitizers=address,thread</code> will fail in the configure script as these sanitizers are mutually incompatible. Refer to your compiler manual to learn more about these options and which sanitizers are supported by your compiler.</p>
+<p>Additional resources:</p>
+<ul>
+<li><a href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer</a></li>
+<li><a href="https://clang.llvm.org/docs/LeakSanitizer.html">LeakSanitizer</a></li>
+<li><a href="https://clang.llvm.org/docs/MemorySanitizer.html">MemorySanitizer</a></li>
+<li><a href="https://clang.llvm.org/docs/ThreadSanitizer.html">ThreadSanitizer</a></li>
+<li><a href="https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">UndefinedBehaviorSanitizer</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html">GCC Instrumentation Options</a></li>
+<li><a href="https://github.com/google/sanitizers/wiki">Google Sanitizers Wiki</a></li>
+<li><a href="https://github.com/bitcoin/bitcoin/issues/12691">Issue #12691: Enable -fsanitize flags in Travis</a></li>
+</ul>
+<h2 id="lockingmutex-usage-notes">Locking/mutex usage notes</h2>
+<p>The code is multi-threaded and uses mutexes and the <code>LOCK</code> and <code>TRY_LOCK</code> macros to protect data structures.</p>
+<p>Deadlocks due to inconsistent lock ordering (thread 1 locks <code>cs_main</code> and then <code>cs_wallet</code>, while thread 2 locks them in the opposite order: result, deadlock as each waits for the other to release its lock) are a problem. Compile with <code>-DDEBUG_LOCKORDER</code> (or use <code>--enable-debug</code>) to get lock order inconsistencies reported in the <code>debug.log</code> file.</p>
+<p>Re-architecting the core code so there are better-defined interfaces between the various components is a goal, with any necessary locking done by the components (e.g. see the self-contained <code>FillableSigningProvider</code> class and its <code>cs_KeyStore</code> lock for example).</p>
+<h2 id="threads">Threads</h2>
+<ul>
+<li><p>ThreadScriptCheck : Verifies block scripts.</p></li>
+<li><p>ThreadImport : Loads blocks from <code>blk*.dat</code> files or <code>-loadblock=&lt;file&gt;</code>.</p></li>
+<li><p>ThreadDNSAddressSeed : Loads addresses of peers from the DNS.</p></li>
+<li><p>ThreadMapPort : Universal plug-and-play startup/shutdown.</p></li>
+<li><p>ThreadSocketHandler : Sends/Receives data from peers on port 8333.</p></li>
+<li><p>ThreadOpenAddedConnections : Opens network connections to added nodes.</p></li>
+<li><p>ThreadOpenConnections : Initiates new connections to peers.</p></li>
+<li><p>ThreadMessageHandler : Higher-level message handling (sending and receiving).</p></li>
+<li><p>DumpAddresses : Dumps IP addresses of nodes to <code>peers.dat</code>.</p></li>
+<li><p>ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.</p></li>
+<li><p>Shutdown : Does an orderly shutdown of everything.</p></li>
+</ul>
+<h2 id="ignoring-ideeditor-files">Ignoring IDE/editor files</h2>
+<p>In closed-source environments in which everyone uses the same IDE, it is common to add temporary files it produces to the project-wide <code>.gitignore</code> file.</p>
+<p>However, in open source software such as Bitcoin Core, where everyone uses their own editors/IDE/tools, it is less common. Only you know what files your editor produces and this may change from version to version. The canonical way to do this is thus to create your local gitignore. Add this to <code>~/.gitconfig</code>:</p>
+<pre><code>[core]
+        excludesfile = /home/.../.gitignore_global
+</code></pre>
+<p>(alternatively, type the command <code>git config --global core.excludesfile ~/.gitignore_global</code> on a terminal)</p>
+<p>Then put your favourite tool's temporary filenames in that file, e.g.</p>
+<pre><code># NetBeans
+nbproject/
+</code></pre>
+<p>Another option is to create a per-repository excludes file <code>.git/info/exclude</code>. These are not committed but apply only to one repository.</p>
+<p>If a set of tools is used by the build system or scripts the repository (for example, lcov) it is perfectly acceptable to add its files to <code>.gitignore</code> and commit them.</p>
+<h1 id="development-guidelines">Development guidelines</h1>
+<p>A few non-style-related recommendations for developers, as well as points to pay attention to for reviewers of Bitcoin Core code.</p>
+<h2 id="general-bitcoin-core">General Bitcoin Core</h2>
+<ul>
+<li><p>New features should be exposed on RPC first, then can be made available in the GUI.</p>
+<ul>
+<li><em>Rationale</em>: RPC allows for better automatic testing. The test suite for the GUI is very limited.</li>
+</ul></li>
+<li><p>Make sure pull requests pass Travis CI before merging.</p>
+<ul>
+<li><p><em>Rationale</em>: Makes sure that they pass thorough testing, and that the tester will keep passing on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in confusion and mayhem.</p></li>
+<li><p><em>Explanation</em>: If the test suite is to be updated for a change, this has to be done first.</p></li>
+</ul></li>
+</ul>
+<h2 id="wallet">Wallet</h2>
+<ul>
+<li><p>Make sure that no crashes happen with run-time option <code>-disablewallet</code>.</p></li>
+<li><p>Include <code>db_cxx.h</code> (BerkeleyDB header) only when <code>ENABLE_WALLET</code> is set.</p>
+<ul>
+<li><em>Rationale</em>: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB.</li>
+</ul></li>
+</ul>
+<h2 id="general-c">General C++</h2>
+<p>For general C++ guidelines, you may refer to the <a href="https://isocpp.github.io/CppCoreGuidelines/">C++ Core Guidelines</a>.</p>
+<p>Common misconceptions are clarified in those sections:</p>
+<ul>
+<li><p>Passing (non-)fundamental types in the <a href="https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional">C++ Core Guideline</a>.</p></li>
+<li><p>Assertions should not have side-effects.</p>
+<ul>
+<li><em>Rationale</em>: Even though the source code is set to refuse to compile with assertions disabled, having side-effects in assertions is unexpected and makes the code harder to understand.</li>
+</ul></li>
+<li><p>If you use the <code>.h</code>, you must link the <code>.cpp</code>.</p>
+<ul>
+<li><em>Rationale</em>: Include files define the interface for the code in implementation files. Including one but not linking the other is confusing. Please avoid that. Moving functions from the <code>.h</code> to the <code>.cpp</code> should not result in build errors.</li>
+</ul></li>
+<li><p>Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example, by using <code>unique_ptr</code> for allocations in a function.</p>
+<ul>
+<li><em>Rationale</em>: This avoids memory and resource leaks, and ensures exception safety.</li>
+</ul></li>
+<li><p>Use <code>MakeUnique()</code> to construct objects owned by <code>unique_ptr</code>s.</p>
+<ul>
+<li><em>Rationale</em>: <code>MakeUnique</code> is concise and ensures exception safety in complex expressions. <code>MakeUnique</code> is a temporary project local implementation of <code>std::make_unique</code> (C++14).</li>
+</ul></li>
+</ul>
+<h2 id="c-data-structures">C++ data structures</h2>
+<ul>
+<li><p>Never use the <code>std::map []</code> syntax when reading from a map, but instead use <code>.find()</code>.</p>
+<ul>
+<li><em>Rationale</em>: <code>[]</code> does an insert (of the default element) if the item doesn't exist in the map yet. This has resulted in memory leaks in the past, as well as race conditions (expecting read-read behavior). Using <code>[]</code> is fine for <em>writing</em> to a map.</li>
+</ul></li>
+<li><p>Do not compare an iterator from one data structure with an iterator of another data structure (even if of the same type).</p>
+<ul>
+<li><em>Rationale</em>: Behavior is undefined. In C++ parlor this means "may reformat the universe", in practice this has resulted in at least one hard-to-debug crash bug.</li>
+</ul></li>
+<li><p>Watch out for out-of-bounds vector access. <code>&amp;vch[vch.size()]</code> is illegal, including <code>&amp;vch[0]</code> for an empty vector. Use <code>vch.data()</code> and <code>vch.data() + vch.size()</code> instead.</p></li>
+<li><p>Vector bounds checking is only enabled in debug mode. Do not rely on it.</p></li>
+<li><p>Initialize all non-static class members where they are defined. If this is skipped for a good reason (i.e., optimization on the critical path), add an explicit comment about this.</p>
+<ul>
+<li><em>Rationale</em>: Ensure determinism by avoiding accidental use of uninitialized values. Also, static analyzers balk about this. Initializing the members in the declaration makes it easy to spot uninitialized ones.</li>
+</ul></li>
+</ul>
+<div class="sourceCode" id="cb17"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">class</span> A</a>
+<a class="sourceLine" id="cb17-2" title="2">{</a>
+<a class="sourceLine" id="cb17-3" title="3">    <span class="dt">uint32_t</span> <span class="va">m_count</span>{<span class="dv">0</span>};</a>
+<a class="sourceLine" id="cb17-4" title="4">}</a></code></pre></div>
+<ul>
+<li><p>By default, declare constructors <code>explicit</code>.</p>
+<ul>
+<li><em>Rationale</em>: This is a precaution to avoid unintended <a href="https://en.cppreference.com/w/cpp/language/converting_constructor">conversions</a>.</li>
+</ul></li>
+<li><p>Use explicitly signed or unsigned <code>char</code>s, or even better <code>uint8_t</code> and <code>int8_t</code>. Do not use bare <code>char</code> unless it is to pass to a third-party API. This type can be signed or unsigned depending on the architecture, which can lead to interoperability problems or dangerous conditions such as out-of-bounds array accesses.</p></li>
+<li><p>Prefer explicit constructions over implicit ones that rely on 'magical' C++ behavior.</p>
+<ul>
+<li><em>Rationale</em>: Easier to understand what is happening, thus easier to spot mistakes, even for those that are not language lawyers.</li>
+</ul></li>
+<li><p>Prefer <code>enum class</code> (scoped enumerations) over <code>enum</code> (traditional enumerations) where possible.</p>
+<ul>
+<li><em>Rationale</em>: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to <code>int</code>, and name clashes due to enumerators being exported to the surrounding scope.</li>
+</ul></li>
+<li><p><code>switch</code> statement on an enumeration example:</p></li>
+</ul>
+<div class="sourceCode" id="cb18"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">enum</span> <span class="kw">class</span> Tabs {</a>
+<a class="sourceLine" id="cb18-2" title="2">    INFO,</a>
+<a class="sourceLine" id="cb18-3" title="3">    CONSOLE,</a>
+<a class="sourceLine" id="cb18-4" title="4">    GRAPH,</a>
+<a class="sourceLine" id="cb18-5" title="5">    PEERS</a>
+<a class="sourceLine" id="cb18-6" title="6">};</a>
+<a class="sourceLine" id="cb18-7" title="7"></a>
+<a class="sourceLine" id="cb18-8" title="8"><span class="dt">int</span> GetInt(Tabs tab)</a>
+<a class="sourceLine" id="cb18-9" title="9">{</a>
+<a class="sourceLine" id="cb18-10" title="10">    <span class="cf">switch</span> (tab) {</a>
+<a class="sourceLine" id="cb18-11" title="11">    <span class="cf">case</span> Tabs::INFO: <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb18-12" title="12">    <span class="cf">case</span> Tabs::CONSOLE: <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb18-13" title="13">    <span class="cf">case</span> Tabs::GRAPH: <span class="cf">return</span> <span class="dv">2</span>;</a>
+<a class="sourceLine" id="cb18-14" title="14">    <span class="cf">case</span> Tabs::PEERS: <span class="cf">return</span> <span class="dv">3</span>;</a>
+<a class="sourceLine" id="cb18-15" title="15">    } <span class="co">// no default case, so the compiler can warn about missing cases</span></a>
+<a class="sourceLine" id="cb18-16" title="16">    <span class="ot">assert</span>(<span class="kw">false</span>);</a>
+<a class="sourceLine" id="cb18-17" title="17">}</a></code></pre></div>
+<p><em>Rationale</em>: The comment documents skipping <code>default:</code> label, and it complies with <code>clang-format</code> rules. The assertion prevents firing of <code>-Wreturn-type</code> warning on some compilers.</p>
+<h2 id="strings-and-formatting">Strings and formatting</h2>
+<ul>
+<li><p>Be careful of <code>LogPrint</code> versus <code>LogPrintf</code>. <code>LogPrint</code> takes a <code>category</code> argument, <code>LogPrintf</code> does not.</p>
+<ul>
+<li><em>Rationale</em>: Confusion of these can result in runtime exceptions due to formatting mismatch, and it is easy to get wrong because of subtly similar naming.</li>
+</ul></li>
+<li><p>Use <code>std::string</code>, avoid C string manipulation functions.</p>
+<ul>
+<li><em>Rationale</em>: C++ string handling is marginally safer, less scope for buffer overflows, and surprises with <code>\0</code> characters. Also, some C string manipulations tend to act differently depending on platform, or even the user locale.</li>
+</ul></li>
+<li><p>Use <code>ParseInt32</code>, <code>ParseInt64</code>, <code>ParseUInt32</code>, <code>ParseUInt64</code>, <code>ParseDouble</code> from <code>utilstrencodings.h</code> for number parsing.</p>
+<ul>
+<li><em>Rationale</em>: These functions do overflow checking and avoid pesky locale issues.</li>
+</ul></li>
+<li><p>Avoid using locale dependent functions if possible. You can use the provided <a href="/test/lint/lint-locale-dependence.sh"><code>lint-locale-dependence.sh</code></a> to check for accidental use of locale dependent functions.</p>
+<ul>
+<li><p><em>Rationale</em>: Unnecessary locale dependence can cause bugs that are very tricky to isolate and fix.</p></li>
+<li><p>These functions are known to be locale dependent: <code>alphasort</code>, <code>asctime</code>, <code>asprintf</code>, <code>atof</code>, <code>atoi</code>, <code>atol</code>, <code>atoll</code>, <code>atoq</code>, <code>btowc</code>, <code>ctime</code>, <code>dprintf</code>, <code>fgetwc</code>, <code>fgetws</code>, <code>fprintf</code>, <code>fputwc</code>, <code>fputws</code>, <code>fscanf</code>, <code>fwprintf</code>, <code>getdate</code>, <code>getwc</code>, <code>getwchar</code>, <code>isalnum</code>, <code>isalpha</code>, <code>isblank</code>, <code>iscntrl</code>, <code>isdigit</code>, <code>isgraph</code>, <code>islower</code>, <code>isprint</code>, <code>ispunct</code>, <code>isspace</code>, <code>isupper</code>, <code>iswalnum</code>, <code>iswalpha</code>, <code>iswblank</code>, <code>iswcntrl</code>, <code>iswctype</code>, <code>iswdigit</code>, <code>iswgraph</code>, <code>iswlower</code>, <code>iswprint</code>, <code>iswpunct</code>, <code>iswspace</code>, <code>iswupper</code>, <code>iswxdigit</code>, <code>isxdigit</code>, <code>mblen</code>, <code>mbrlen</code>, <code>mbrtowc</code>, <code>mbsinit</code>, <code>mbsnrtowcs</code>, <code>mbsrtowcs</code>, <code>mbstowcs</code>, <code>mbtowc</code>, <code>mktime</code>, <code>putwc</code>, <code>putwchar</code>, <code>scanf</code>, <code>snprintf</code>, <code>sprintf</code>, <code>sscanf</code>, <code>stoi</code>, <code>stol</code>, <code>stoll</code>, <code>strcasecmp</code>, <code>strcasestr</code>, <code>strcoll</code>, <code>strfmon</code>, <code>strftime</code>, <code>strncasecmp</code>, <code>strptime</code>, <code>strtod</code>, <code>strtof</code>, <code>strtoimax</code>, <code>strtol</code>, <code>strtold</code>, <code>strtoll</code>, <code>strtoq</code>, <code>strtoul</code>, <code>strtoull</code>, <code>strtoumax</code>, <code>strtouq</code>, <code>strxfrm</code>, <code>swprintf</code>, <code>tolower</code>, <code>toupper</code>, <code>towctrans</code>, <code>towlower</code>, <code>towupper</code>, <code>ungetwc</code>, <code>vasprintf</code>, <code>vdprintf</code>, <code>versionsort</code>, <code>vfprintf</code>, <code>vfscanf</code>, <code>vfwprintf</code>, <code>vprintf</code>, <code>vscanf</code>, <code>vsnprintf</code>, <code>vsprintf</code>, <code>vsscanf</code>, <code>vswprintf</code>, <code>vwprintf</code>, <code>wcrtomb</code>, <code>wcscasecmp</code>, <code>wcscoll</code>, <code>wcsftime</code>, <code>wcsncasecmp</code>, <code>wcsnrtombs</code>, <code>wcsrtombs</code>, <code>wcstod</code>, <code>wcstof</code>, <code>wcstoimax</code>, <code>wcstol</code>, <code>wcstold</code>, <code>wcstoll</code>, <code>wcstombs</code>, <code>wcstoul</code>, <code>wcstoull</code>, <code>wcstoumax</code>, <code>wcswidth</code>, <code>wcsxfrm</code>, <code>wctob</code>, <code>wctomb</code>, <code>wctrans</code>, <code>wctype</code>, <code>wcwidth</code>, <code>wprintf</code></p></li>
+</ul></li>
+<li><p>For <code>strprintf</code>, <code>LogPrint</code>, <code>LogPrintf</code> formatting characters don't need size specifiers.</p>
+<ul>
+<li><em>Rationale</em>: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.</li>
+</ul></li>
+<li><p>Use <code>.c_str()</code> sparingly. Its only valid use is to pass C++ strings to C functions that take NULL-terminated strings.</p>
+<ul>
+<li><p>Do not use it when passing a sized array (so along with <code>.size()</code>). Use <code>.data()</code> instead to get a pointer to the raw data.</p>
+<ul>
+<li><em>Rationale</em>: Although this is guaranteed to be safe starting with C++11, <code>.data()</code> communicates the intent better.</li>
+</ul></li>
+<li><p>Do not use it when passing strings to <code>tfm::format</code>, <code>strprintf</code>, <code>LogPrint[f]</code>.</p>
+<ul>
+<li><em>Rationale</em>: This is redundant. Tinyformat handles strings.</li>
+</ul></li>
+<li><p>Do not use it to convert to <code>QString</code>. Use <code>QString::fromStdString()</code>.</p>
+<ul>
+<li><em>Rationale</em>: Qt has built-in functionality for converting their string type from/to C++. No need to roll your own.</li>
+</ul></li>
+<li><p>In cases where do you call <code>.c_str()</code>, you might want to additionally check that the string does not contain embedded '\0' characters, because it will (necessarily) truncate the string. This might be used to hide parts of the string from logging or to circumvent checks. If a use of strings is sensitive to this, take care to check the string for embedded NULL characters first and reject it if there are any (see <code>ParsePrechecks</code> in <code>strencodings.cpp</code> for an example).</p></li>
+</ul></li>
+</ul>
+<h2 id="shadowing">Shadowing</h2>
+<p>Although the shadowing warning (<code>-Wshadow</code>) is not enabled by default (it prevents issues arising from using a different variable with the same name), please name variables so that their names do not shadow variables defined in the source code.</p>
+<p>When using nested cycles, do not name the inner cycle variable the same as in the upper cycle, etc.</p>
+<h2 id="threads-and-synchronization">Threads and synchronization</h2>
+<ul>
+<li><p>Build and run tests with <code>-DDEBUG_LOCKORDER</code> to verify that no potential deadlocks are introduced. As of 0.12, this is defined by default when configuring with <code>--enable-debug</code>.</p></li>
+<li><p>When using <code>LOCK</code>/<code>TRY_LOCK</code> be aware that the lock exists in the context of the current scope, so surround the statement and the code that needs the lock with braces.</p>
+<p>OK:</p></li>
+</ul>
+<div class="sourceCode" id="cb19"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb19-1" title="1">{</a>
+<a class="sourceLine" id="cb19-2" title="2">    TRY_LOCK(cs_vNodes, lockNodes);</a>
+<a class="sourceLine" id="cb19-3" title="3">    ...</a>
+<a class="sourceLine" id="cb19-4" title="4">}</a></code></pre></div>
+<p>Wrong:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb20-1" title="1">TRY_LOCK(cs_vNodes, lockNodes);</a>
+<a class="sourceLine" id="cb20-2" title="2">{</a>
+<a class="sourceLine" id="cb20-3" title="3">    ...</a>
+<a class="sourceLine" id="cb20-4" title="4">}</a></code></pre></div>
+<h2 id="scripts">Scripts</h2>
+<h3 id="shebang">Shebang</h3>
+<ul>
+<li><p>Use <code>#!/usr/bin/env bash</code> instead of obsolete <code>#!/bin/bash</code>.</p>
+<ul>
+<li><p><a href="https://github.com/dylanaraps/pure-bash-bible#shebang"><em>Rationale</em></a>:</p>
+<p><code>#!/bin/bash</code> assumes it is always installed to /bin/ which can cause issues;</p>
+<p><code>#!/usr/bin/env bash</code> searches the user's PATH to find the bash binary.</p></li>
+</ul>
+<p>OK:</p></li>
+</ul>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb21-1" title="1"><span class="co">#!/usr/bin/env bash</span></a></code></pre></div>
+<p>Wrong:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1"><span class="co">#!/bin/bash</span></a></code></pre></div>
+<h2 id="source-code-organization">Source code organization</h2>
+<ul>
+<li><p>Implementation code should go into the <code>.cpp</code> file and not the <code>.h</code>, unless necessary due to template usage or when performance due to inlining is critical.</p>
+<ul>
+<li><em>Rationale</em>: Shorter and simpler header files are easier to read and reduce compile time.</li>
+</ul></li>
+<li><p>Use only the lowercase alphanumerics (<code>a-z0-9</code>), underscore (<code>_</code>) and hyphen (<code>-</code>) in source code filenames.</p>
+<ul>
+<li><em>Rationale</em>: <code>grep</code>:ing and auto-completing filenames is easier when using a consistent naming pattern. Potential problems when building on case-insensitive filesystems are avoided when using only lowercase characters in source code filenames.</li>
+</ul></li>
+<li><p>Every <code>.cpp</code> and <code>.h</code> file should <code>#include</code> every header file it directly uses classes, functions or other definitions from, even if those headers are already included indirectly through other headers.</p>
+<ul>
+<li><em>Rationale</em>: Excluding headers because they are already indirectly included results in compilation failures when those indirect dependencies change. Furthermore, it obscures what the real code dependencies are.</li>
+</ul></li>
+<li><p>Don't import anything into the global namespace (<code>using namespace ...</code>). Use fully specified types such as <code>std::string</code>.</p>
+<ul>
+<li><em>Rationale</em>: Avoids symbol conflicts.</li>
+</ul></li>
+<li><p>Terminate namespaces with a comment (<code>// namespace mynamespace</code>). The comment should be placed on the same line as the brace closing the namespace, e.g.</p></li>
+</ul>
+<div class="sourceCode" id="cb23"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">namespace</span> mynamespace {</a>
+<a class="sourceLine" id="cb23-2" title="2">...</a>
+<a class="sourceLine" id="cb23-3" title="3">} <span class="co">// namespace mynamespace</span></a>
+<a class="sourceLine" id="cb23-4" title="4"></a>
+<a class="sourceLine" id="cb23-5" title="5"><span class="kw">namespace</span> {</a>
+<a class="sourceLine" id="cb23-6" title="6">...</a>
+<a class="sourceLine" id="cb23-7" title="7">} <span class="co">// namespace</span></a></code></pre></div>
+<ul>
+<li><p><em>Rationale</em>: Avoids confusion about the namespace context.</p></li>
+<li><p>Use <code>#include &lt;primitives/transaction.h&gt;</code> bracket syntax instead of <code>#include "primitives/transactions.h"</code> quote syntax.</p>
+<ul>
+<li><em>Rationale</em>: Bracket syntax is less ambiguous because the preprocessor searches a fixed list of include directories without taking location of the source file into account. This allows quoted includes to stand out more when the location of the source file actually is relevant.</li>
+</ul></li>
+<li><p>Use include guards to avoid the problem of double inclusion. The header file <code>foo/bar.h</code> should use the include guard identifier <code>BITCOIN_FOO_BAR_H</code>, e.g.</p></li>
+</ul>
+<div class="sourceCode" id="cb24"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb24-1" title="1"><span class="pp">#ifndef BITCOIN_FOO_BAR_H</span></a>
+<a class="sourceLine" id="cb24-2" title="2"><span class="pp">#define B</span>ITCOIN_FOO_BAR_H</a>
+<a class="sourceLine" id="cb24-3" title="3">...</a>
+<a class="sourceLine" id="cb24-4" title="4"><span class="pp">#endif </span><span class="co">// BITCOIN_FOO_BAR_H</span></a></code></pre></div>
+<h2 id="gui">GUI</h2>
+<ul>
+<li><p>Do not display or manipulate dialogs in model code (classes <code>*Model</code>).</p>
+<ul>
+<li><em>Rationale</em>: Model classes pass through events and data from the core, they should not interact with the user. That's where View classes come in. The converse also holds: try to not directly access core data structures from Views.</li>
+</ul></li>
+<li><p>Avoid adding slow or blocking code in the GUI thread. In particular, do not add new <code>interfaces::Node</code> and <code>interfaces::Wallet</code> method calls, even if they may be fast now, in case they are changed to lock or communicate across processes in the future.</p>
+<p>Prefer to offload work from the GUI thread to worker threads (see <code>RPCExecutor</code> in console code as an example) or take other steps (see <a href="https://doc.qt.io/archives/qq/qq27-responsive-guis.html">https://doc.qt.io/archives/qq/qq27-responsive-guis.html</a>) to keep the GUI responsive.</p>
+<ul>
+<li><em>Rationale</em>: Blocking the GUI thread can increase latency, and lead to hangs and deadlocks.</li>
+</ul></li>
+</ul>
+<h2 id="subtrees">Subtrees</h2>
+<p>Several parts of the repository are subtrees of software maintained elsewhere.</p>
+<p>Some of these are maintained by active developers of Bitcoin Core, in which case changes should probably go directly upstream without being PRed directly against the project. They will be merged back in the next subtree merge.</p>
+<p>Others are external projects without a tight relationship with our project. Changes to these should also be sent upstream, but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated quickly. Cosmetic changes should be purely taken upstream.</p>
+<p>There is a tool in <code>test/lint/git-subtree-check.sh</code> to check a subtree directory for consistency with its upstream repository.</p>
+<p>Current subtrees include:</p>
+<ul>
+<li><p>src/leveldb</p>
+<ul>
+<li>Upstream at <a href="https://github.com/google/leveldb">https://github.com/google/leveldb</a> ; Maintained by Google, but open important PRs to Core to avoid delay.</li>
+<li><strong>Note</strong>: Follow the instructions in <a href="#upgrading-leveldb">Upgrading LevelDB</a> when merging upstream changes to the LevelDB subtree.</li>
+</ul></li>
+<li><p>src/crc32c</p>
+<ul>
+<li>Used by leveldb for hardware acceleration of CRC32C checksums for data integrity.</li>
+<li>Upstream at <a href="https://github.com/google/crc32c">https://github.com/google/crc32c</a> ; Maintained by Google.</li>
+</ul></li>
+<li><p>src/secp256k1</p>
+<ul>
+<li>Upstream at <a href="https://github.com/bitcoin-core/secp256k1/">https://github.com/bitcoin-core/secp256k1/</a> ; actively maintained by Core contributors.</li>
+</ul></li>
+<li><p>src/crypto/ctaes</p>
+<ul>
+<li>Upstream at <a href="https://github.com/bitcoin-core/ctaes">https://github.com/bitcoin-core/ctaes</a> ; actively maintained by Core contributors.</li>
+</ul></li>
+<li><p>src/univalue</p>
+<ul>
+<li>Upstream at <a href="https://github.com/bitcoin-core/univalue">https://github.com/bitcoin-core/univalue</a> ; actively maintained by Core contributors, deviates from upstream <a href="https://github.com/jgarzik/univalue">https://github.com/jgarzik/univalue</a></li>
+</ul></li>
+</ul>
+<h2 id="upgrading-leveldb">Upgrading LevelDB</h2>
+<p>Extra care must be taken when upgrading LevelDB. This section explains issues you must be aware of.</p>
+<h3 id="file-descriptor-counts">File Descriptor Counts</h3>
+<p>In most configurations, we use the default LevelDB value for <code>max_open_files</code>, which is 1000 at the time of this writing. If LevelDB actually uses this many file descriptors, it will cause problems with Bitcoin's <code>select()</code> loop, because it may cause new sockets to be created where the fd value is &gt;= 1024. For this reason, on 64-bit Unix systems, we rely on an internal LevelDB optimization that uses <code>mmap()</code> + <code>close()</code> to open table files without actually retaining references to the table file descriptors. If you are upgrading LevelDB, you must sanity check the changes to make sure that this assumption remains valid.</p>
+<p>In addition to reviewing the upstream changes in <code>env_posix.cc</code>, you can use <code>lsof</code> to check this. For example, on Linux this command will show open <code>.ldb</code> file counts:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1">$ <span class="ex">lsof</span> -p <span class="va">$(</span><span class="fu">pidof</span> bitcoind<span class="va">)</span> <span class="kw">|\</span></a>
+<a class="sourceLine" id="cb25-2" title="2">    <span class="fu">awk</span> <span class="st">&#39;BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == &quot;mem&quot;) mem++; else fd++ } END { printf &quot;mem = %s, fd = %s\n&quot;, mem, fd}&#39;</span></a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="ex">mem</span> = 119, fd = 0</a></code></pre></div>
+<p>The <code>mem</code> value shows how many files are mmap'ed, and the <code>fd</code> value shows you many file descriptors these files are using. You should check that <code>fd</code> is a small number (usually 0 on 64-bit hosts).</p>
+<p>See the notes in the <code>SetMaxOpenFiles()</code> function in <code>dbwrapper.cc</code> for more details.</p>
+<h3 id="consensus-compatibility">Consensus Compatibility</h3>
+<p>It is possible for LevelDB changes to inadvertently change consensus compatibility between nodes. This happened in Bitcoin 0.8 (when LevelDB was first introduced). When upgrading LevelDB, you should review the upstream changes to check for issues affecting consensus compatibility.</p>
+<p>For example, if LevelDB had a bug that accidentally prevented a key from being returned in an edge case, and that bug was fixed upstream, the bug "fix" would be an incompatible consensus change. In this situation, the correct behavior would be to revert the upstream fix before applying the updates to Bitcoin's copy of LevelDB. In general, you should be wary of any upstream changes affecting what data is returned from LevelDB queries.</p>
+<h2 id="scripted-diffs">Scripted diffs</h2>
+<p>For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that the result of the script is identical to the commit. This aids reviewers since they can verify that the script does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run on the new master commit).</p>
+<p>To create a scripted-diff:</p>
+<ul>
+<li>start the commit message with <code>scripted-diff:</code> (and then a description of the diff on the same line)</li>
+<li>in the commit message include the bash script between lines containing just the following text:
+<ul>
+<li><code>-BEGIN VERIFY SCRIPT-</code></li>
+<li><code>-END VERIFY SCRIPT-</code></li>
+</ul></li>
+</ul>
+<p>The scripted-diff is verified by the tool <code>test/lint/commit-script-check.sh</code>. The tool's default behavior, when supplied with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes the first supplied argument to <code>git rev-list --reverse</code> to determine which commits to verify script-diffs for, ignoring commits that don't conform to the commit message format described above.</p>
+<p>For development, it might be more convenient to verify all scripted-diffs in a range <code>A..B</code>, for example:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb26-1" title="1"><span class="ex">test/lint/commit-script-check.sh</span> origin/master..HEAD</a></code></pre></div>
+<h3 id="suggestions-and-examples">Suggestions and examples</h3>
+<p>If you need to replace in multiple files, prefer <code>git ls-files</code> to <code>find</code> or globbing, and <code>git grep</code> to <code>grep</code>, to avoid changing files that are not under version control.</p>
+<p>For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for example, instead of a blanket <code>git ls-files src | xargs sed -i s/apple/orange/</code>, use <code>git grep -l apple src | xargs sed -i s/apple/orange/</code>.</p>
+<p>Also, it is good to keep the selection of files as specific as possible — for example, replace only in directories where you expect replacements — because it reduces the risk that a rebase of your commit by re-running the script will introduce accidental changes.</p>
+<p>Some good examples of scripted-diff:</p>
+<ul>
+<li><p><a href="https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d">scripted-diff: Rename InitInterfaces to NodeContext</a> uses an elegant script to replace occurrences of multiple terms in all source files.</p></li>
+<li><p><a href="https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d">scripted-diff: Remove g_connman, g_banman globals</a> replaces specific terms in a list of specific source files.</p></li>
+<li><p><a href="https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9">scripted-diff: Replace fprintf with tfm::format</a> does a global replacement but excludes certain directories.</p></li>
+</ul>
+<p>To find all previous uses of scripted diffs in the repository, do:</p>
+<pre><code>git log --grep=&quot;-BEGIN VERIFY SCRIPT-&quot;
+</code></pre>
+<h2 id="release-notes">Release notes</h2>
+<p>Release notes should be written for any PR that:</p>
+<ul>
+<li>introduces a notable new feature</li>
+<li>fixes a significant bug</li>
+<li>changes an API or configuration model</li>
+<li>makes any other visible change to the end-user experience.</li>
+</ul>
+<p>Release notes should be added to a PR-specific release note file at <code>/doc/release-notes-&lt;PR number&gt;.html</code> to avoid conflicts between multiple PRs. All <code>release-notes*</code> files are merged into a single <a href="/doc/release-notes.html">/doc/release-notes.html</a> file prior to the release.</p>
+<h2 id="rpc-interface-guidelines">RPC interface guidelines</h2>
+<p>A few guidelines for introducing and reviewing new RPC interfaces:</p>
+<ul>
+<li><p>Method naming: use consecutive lower-case names such as <code>getrawtransaction</code> and <code>submitblock</code>.</p>
+<ul>
+<li><em>Rationale</em>: Consistency with the existing interface.</li>
+</ul></li>
+<li><p>Argument naming: use snake case <code>fee_delta</code> (and not, e.g. camel case <code>feeDelta</code>)</p>
+<ul>
+<li><em>Rationale</em>: Consistency with the existing interface.</li>
+</ul></li>
+<li><p>Use the JSON parser for parsing, don't manually parse integers or strings from arguments unless absolutely necessary.</p>
+<ul>
+<li><p><em>Rationale</em>: Introduces hand-rolled string manipulation code at both the caller and callee sites, which is error-prone, and it is easy to get things such as escaping wrong. JSON already supports nested data structures, no need to re-invent the wheel.</p></li>
+<li><p><em>Exception</em>: AmountFromValue can parse amounts as string. This was introduced because many JSON parsers and formatters hard-code handling decimal numbers as floating-point values, resulting in potential loss of precision. This is unacceptable for monetary values. <strong>Always</strong> use <code>AmountFromValue</code> and <code>ValueFromAmount</code> when inputting or outputting monetary values. The only exceptions to this are <code>prioritisetransaction</code> and <code>getblocktemplate</code> because their interface is specified as-is in BIP22.</p></li>
+</ul></li>
+<li><p>Missing arguments and 'null' should be treated the same: as default values. If there is no default value, both cases should fail in the same way. The easiest way to follow this guideline is to detect unspecified arguments with <code>params[x].isNull()</code> instead of <code>params.size() &lt;= x</code>. The former returns true if the argument is either null or missing, while the latter returns true if is missing, and false if it is null.</p>
+<ul>
+<li><em>Rationale</em>: Avoids surprises when switching to name-based arguments. Missing name-based arguments are passed as 'null'.</li>
+</ul></li>
+<li><p>Try not to overload methods on argument type. E.g. don't make <code>getblock(true)</code> and <code>getblock("hash")</code> do different things.</p>
+<ul>
+<li><p><em>Rationale</em>: This is impossible to use with <code>bitcoin-cli</code>, and can be surprising to users.</p></li>
+<li><p><em>Exception</em>: Some RPC calls can take both an <code>int</code> and <code>bool</code>, most notably when a bool was switched to a multi-value, or due to other historical reasons. <strong>Always</strong> have false map to 0 and true to 1 in this case.</p></li>
+</ul></li>
+<li><p>Don't forget to fill in the argument names correctly in the RPC command table.</p>
+<ul>
+<li><em>Rationale</em>: If not, the call can not be used with name-based arguments.</li>
+</ul></li>
+<li><p>Set okSafeMode in the RPC command table to a sensible value: safe mode is when the blockchain is regarded to be in a confused state, and the client deems it unsafe to do anything irreversible such as send. Anything that just queries should be permitted.</p>
+<ul>
+<li><em>Rationale</em>: Troubleshooting a node in safe mode is difficult if half the RPCs don't work.</li>
+</ul></li>
+<li><p>Add every non-string RPC argument <code>(method, idx, name)</code> to the table <code>vRPCConvertParams</code> in <code>rpc/client.cpp</code>.</p>
+<ul>
+<li><em>Rationale</em>: <code>bitcoin-cli</code> and the GUI debug console use this table to determine how to convert a plaintext command line to JSON. If the types don't match, the method can be unusable from there.</li>
+</ul></li>
+<li><p>A RPC method must either be a wallet method or a non-wallet method. Do not introduce new methods that differ in behavior based on the presence of a wallet.</p>
+<ul>
+<li><em>Rationale</em>: As well as complicating the implementation and interfering with the introduction of multi-wallet, wallet and non-wallet code should be separated to avoid introducing circular dependencies between code units.</li>
+</ul></li>
+<li><p>Try to make the RPC response a JSON object.</p>
+<ul>
+<li><em>Rationale</em>: If a RPC response is not a JSON object, then it is harder to avoid API breakage if new data in the response is needed.</li>
+</ul></li>
+<li><p>Wallet RPCs call BlockUntilSyncedToCurrentChain to maintain consistency with <code>getblockchaininfo</code>'s state immediately prior to the call's execution. Wallet RPCs whose behavior does <em>not</em> depend on the current chainstate may omit this call.</p>
+<ul>
+<li><em>Rationale</em>: In previous versions of Bitcoin Core, the wallet was always in-sync with the chainstate (by virtue of them all being updated in the same cs_main lock). In order to maintain the behavior that wallet RPCs return results as of at least the highest best-known block an RPC client may be aware of prior to entering a wallet RPC call, we must block until the wallet is caught up to the chainstate as of the RPC call's entry. This also makes the API much easier for RPC clients to reason about.</li>
+</ul></li>
+<li><p>Be aware of RPC method aliases and generally avoid registering the same callback function pointer for different RPCs.</p>
+<ul>
+<li><p><em>Rationale</em>: RPC methods registered with the same function pointer will be considered aliases and only the first method name will show up in the <code>help</code> RPC command list.</p></li>
+<li><p><em>Exception</em>: Using RPC method aliases may be appropriate in cases where a new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly showing up in the command list.</p></li>
+</ul></li>
+<li><p>Use <em>invalid</em> bech32 addresses (e.g. the constant <code>EXAMPLE_ADDRESS</code>) for <code>RPCExamples</code> help documentation.</p>
+<ul>
+<li><em>Rationale</em>: Prevent accidental transactions by users and encourage the use of bech32 addresses by default.</li>
+</ul></li>
+<li><p>Use the <code>UNIX_EPOCH_TIME</code> constant when describing UNIX epoch time or timestamps in the documentation.</p>
+<ul>
+<li><em>Rationale</em>: User-facing consistency.</li>
+</ul></li>
+</ul>
+</body>
+</html>

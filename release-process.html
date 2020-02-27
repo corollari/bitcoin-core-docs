@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>release-process</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="release-process">Release Process</h1>
+<h2 id="branch-updates">Branch updates</h2>
+<h3 id="before-every-release-candidate">Before every release candidate</h3>
+<ul>
+<li>Update translations (ping wumpus on IRC) see <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.html#synchronising-translations">translation_process.html</a>.</li>
+<li>Update manpages, see <a href="https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.html#gen-manpagessh">gen-manpages.sh</a>.</li>
+<li>Update release candidate version in <code>configure.ac</code> (<code>CLIENT_VERSION_RC</code>).</li>
+</ul>
+<h3 id="before-every-major-and-minor-release">Before every major and minor release</h3>
+<ul>
+<li>Update <a href="bips.html">bips.html</a> to account for changes since the last release (don't forget to bump the version number on the first line).</li>
+<li>Update version in <code>configure.ac</code> (don't forget to set <code>CLIENT_VERSION_RC</code> to <code>0</code>).</li>
+<li>Write release notes (see "Write the release notes" below).</li>
+</ul>
+<h3 id="before-every-major-release">Before every major release</h3>
+<ul>
+<li>On both the master branch and the new release branch:
+<ul>
+<li>update <code>CLIENT_VERSION_MINOR</code> in <a href="../configure.ac"><code>configure.ac</code></a></li>
+<li>update <code>CLIENT_VERSION_MINOR</code>, <code>PACKAGE_VERSION</code>, and <code>PACKAGE_STRING</code> in <a href="/build_msvc/bitcoin_config.h"><code>build_msvc/bitcoin_config.h</code></a></li>
+</ul></li>
+<li>On the new release branch in <a href="../configure.ac"><code>configure.ac</code></a> and <a href="/build_msvc/bitcoin_config.h"><code>build_msvc/bitcoin_config.h</code></a> (see <a href="https://github.com/bitcoin/bitcoin/commit/742f7dd">this commit</a>):
+<ul>
+<li>set <code>CLIENT_VERSION_REVISION</code> to <code>0</code></li>
+<li>set <code>CLIENT_VERSION_IS_RELEASE</code> to <code>true</code></li>
+</ul></li>
+</ul>
+<h4 id="before-branch-off">Before branch-off</h4>
+<ul>
+<li>Update hardcoded <a href="/contrib/seeds/README.html">seeds</a>, see <a href="https://github.com/bitcoin/bitcoin/pull/7415">this pull request</a> for an example.</li>
+<li>Update <a href="/src/chainparams.cpp"><code>src/chainparams.cpp</code></a> m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see <a href="#how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size">this</a> for information on how to calculate them).</li>
+<li>Update <code>src/chainparams.cpp</code> chainTxData with statistics about the transaction count and rate. Use the output of the RPC <code>getchaintxstats</code>, see <a href="https://github.com/bitcoin/bitcoin/pull/17002">this pull request</a> for an example. Reviewers can verify the results by running <code>getchaintxstats &lt;window_block_count&gt; &lt;window_last_block_hash&gt;</code> with the <code>window_block_count</code> and <code>window_last_block_hash</code> from your output.</li>
+<li>Update <code>src/chainparams.cpp</code> nMinimumChainWork with information from the getblockchaininfo rpc.</li>
+<li>Update <code>src/chainparams.cpp</code> defaultAssumeValid with information from the getblockhash rpc.
+<ul>
+<li>The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.</li>
+<li>Testnet should be set some tens of thousands back from the tip due to reorgs there.</li>
+<li>This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect that causes rejection of blocks in the past history.</li>
+</ul></li>
+</ul>
+<ul>
+<li>Clear the release notes and move them to the wiki (see "Write the release notes" below).</li>
+</ul>
+<h4 id="after-branch-off-on-master">After branch-off (on master)</h4>
+<ul>
+<li>Update the version of <code>contrib/gitian-descriptors/*.yml</code>.</li>
+</ul>
+<h4 id="after-branch-off-on-the-major-release-branch">After branch-off (on the major release branch)</h4>
+<ul>
+<li>Update the versions.</li>
+<li>Create a pinned meta-issue for testing the release candidate (see <a href="https://github.com/bitcoin/bitcoin/issues/17079">this issue</a> for an example) and provide a link to it in the release announcements where useful.</li>
+</ul>
+<h4 id="before-final-release">Before final release</h4>
+<ul>
+<li>Merge the release notes from the wiki into the branch.</li>
+<li>Ensure the "Needs release note" label is removed from all relevant pull requests and issues.</li>
+</ul>
+<h2 id="building">Building</h2>
+<h3 id="first-time--new-builders">First time / New builders</h3>
+<p>If you're using the automated script (found in <a href="/contrib/gitian-build.py">contrib/gitian-build.py</a>), then at this point you should run it with the "--setup" command. Otherwise ignore this.</p>
+<p>Check out the source code in the following directory hierarchy.</p>
+<pre><code>cd /path/to/your/toplevel/build
+git clone https://github.com/bitcoin-core/gitian.sigs.git
+git clone https://github.com/bitcoin-core/bitcoin-detached-sigs.git
+git clone https://github.com/devrandom/gitian-builder.git
+git clone https://github.com/bitcoin/bitcoin.git
+</code></pre>
+<h3 id="write-the-release-notes">Write the release notes</h3>
+<p>Open a draft of the release notes for collaborative editing at <a href="https://github.com/bitcoin-core/bitcoin-devwiki/wiki">https://github.com/bitcoin-core/bitcoin-devwiki/wiki</a>.</p>
+<p>For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until <code>-final</code>.</p>
+<p>Write the release notes. <code>git shortlog</code> helps a lot, for example:</p>
+<pre><code>git shortlog --no-merges v(current version, e.g. 0.19.2)..v(new version, e.g. 0.20.0)
+</code></pre>
+<p>(or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls and sort them into categories based on labels).</p>
+<p>Generate list of authors:</p>
+<pre><code>git log --format=&#39;- %aN&#39; v(current version, e.g. 0.20.0)..v(new version, e.g. 0.20.1) | sort -fiu
+</code></pre>
+<p>Tag the version (or release candidate) in git:</p>
+<pre><code>git tag -s v(new version, e.g. 0.20.0)
+</code></pre>
+<h3 id="setup-and-perform-gitian-builds">Setup and perform Gitian builds</h3>
+<p>If you're using the automated script (found in <a href="/contrib/gitian-build.py">contrib/gitian-build.py</a>), then at this point you should run it with the "--build" command. Otherwise ignore this.</p>
+<p>Setup Gitian descriptors:</p>
+<pre><code>pushd ./bitcoin
+export SIGNER=&quot;(your Gitian key, ie bluematt, sipa, etc)&quot;
+export VERSION=(new version, e.g. 0.20.0)
+git fetch
+git checkout v${VERSION}
+popd
+</code></pre>
+<p>Ensure your gitian.sigs are up-to-date if you wish to gverify your builds against other Gitian signatures.</p>
+<pre><code>pushd ./gitian.sigs
+git pull
+popd
+</code></pre>
+<p>Ensure gitian-builder is up-to-date:</p>
+<pre><code>pushd ./gitian-builder
+git pull
+popd
+</code></pre>
+<h3 id="fetch-and-create-inputs-first-time-or-when-dependency-versions-change">Fetch and create inputs: (first time, or when dependency versions change)</h3>
+<pre><code>pushd ./gitian-builder
+mkdir -p inputs
+wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
+echo &#39;5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz&#39; | sha256sum -c
+popd
+</code></pre>
+<p>Create the macOS SDK tarball, see the <a href="/contrib/macdeploy/README.html#deterministic-macos-dmg-notes">macdeploy instructions</a> for details, and copy it into the inputs directory.</p>
+<h3 id="optional-seed-the-gitian-sources-cache-and-offline-git-repositories">Optional: Seed the Gitian sources cache and offline git repositories</h3>
+<p>NOTE: Gitian is sometimes unable to download files. If you have errors, try the step below.</p>
+<p>By default, Gitian will fetch source files as needed. To cache them ahead of time, make sure you have checked out the tag you want to build in bitcoin, then:</p>
+<pre><code>pushd ./gitian-builder
+make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
+popd
+</code></pre>
+<p>Only missing files will be fetched, so this is safe to re-run for each build.</p>
+<p>NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from local URLs. For example:</p>
+<pre><code>pushd ./gitian-builder
+./bin/gbuild --url bitcoin=/path/to/bitcoin,signature=/path/to/sigs {rest of arguments}
+popd
+</code></pre>
+<p>The gbuild invocations below <b>DO NOT DO THIS</b> by default.</p>
+<h3 id="build-and-sign-bitcoin-core-for-linux-windows-and-macos">Build and sign Bitcoin Core for Linux, Windows, and macOS:</h3>
+<pre><code>pushd ./gitian-builder
+./bin/gbuild --num-make 2 --memory 3000 --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+./bin/gsign --signer &quot;$SIGNER&quot; --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
+
+./bin/gbuild --num-make 2 --memory 3000 --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+./bin/gsign --signer &quot;$SIGNER&quot; --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
+mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
+
+./bin/gbuild --num-make 2 --memory 3000 --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+./bin/gsign --signer &quot;$SIGNER&quot; --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
+mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
+popd
+</code></pre>
+<p>Build output expected:</p>
+<ol>
+<li>source tarball (<code>bitcoin-${VERSION}.tar.gz</code>)</li>
+<li>linux 32-bit and 64-bit dist tarballs (<code>bitcoin-${VERSION}-linux[32|64].tar.gz</code>)</li>
+<li>windows 32-bit and 64-bit unsigned installers and dist zips (<code>bitcoin-${VERSION}-win[32|64]-setup-unsigned.exe</code>, <code>bitcoin-${VERSION}-win[32|64].zip</code>)</li>
+<li>macOS unsigned installer and dist tarball (<code>bitcoin-${VERSION}-osx-unsigned.dmg</code>, <code>bitcoin-${VERSION}-osx64.tar.gz</code>)</li>
+<li>Gitian signatures (in <code>gitian.sigs/${VERSION}-&lt;linux|{win,osx}-unsigned&gt;/(your Gitian key)/</code>)</li>
+</ol>
+<h3 id="verify-other-gitian-builders-signatures-to-your-own-optional">Verify other gitian builders signatures to your own. (Optional)</h3>
+<p>Add other gitian builders keys to your gpg keyring, and/or refresh keys: See <code>../bitcoin/contrib/gitian-keys/README.html</code>.</p>
+<p>Verify the signatures</p>
+<pre><code>pushd ./gitian-builder
+./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+popd
+</code></pre>
+<h3 id="next-steps">Next steps:</h3>
+<p>Commit your signature to gitian.sigs:</p>
+<pre><code>pushd gitian.sigs
+git add ${VERSION}-linux/&quot;${SIGNER}&quot;
+git add ${VERSION}-win-unsigned/&quot;${SIGNER}&quot;
+git add ${VERSION}-osx-unsigned/&quot;${SIGNER}&quot;
+git commit -m &quot;Add ${VERSION} unsigned sigs for ${SIGNER}&quot;
+git push  # Assuming you can push to the gitian.sigs tree
+popd
+</code></pre>
+<p>Codesigner only: Create Windows/macOS detached signatures:</p>
+<ul>
+<li>Only one person handles codesigning. Everyone else should skip to the next step.</li>
+<li>Only once the Windows/macOS builds each have 3 matching signatures may they be signed with their respective release keys.</li>
+</ul>
+<p>Codesigner only: Sign the macOS binary:</p>
+<pre><code>transfer bitcoin-osx-unsigned.tar.gz to macOS for signing
+tar xf bitcoin-osx-unsigned.tar.gz
+./detached-sig-create.sh -s &quot;Key ID&quot;
+Enter the keychain password and authorize the signature
+Move signature-osx.tar.gz back to the gitian host
+</code></pre>
+<p>Codesigner only: Sign the windows binaries:</p>
+<pre><code>tar xf bitcoin-win-unsigned.tar.gz
+./detached-sig-create.sh -key /path/to/codesign.key
+Enter the passphrase for the key when prompted
+signature-win.tar.gz will be created
+</code></pre>
+<p>Codesigner only: Commit the detached codesign payloads:</p>
+<pre><code>cd ~/bitcoin-detached-sigs
+checkout the appropriate branch for this release series
+rm -rf *
+tar xf signature-osx.tar.gz
+tar xf signature-win.tar.gz
+git add -a
+git commit -m &quot;point to ${VERSION}&quot;
+git tag -s v${VERSION} HEAD
+git push the current branch and new tag
+</code></pre>
+<p>Non-codesigners: wait for Windows/macOS detached signatures:</p>
+<ul>
+<li>Once the Windows/macOS builds each have 3 matching signatures, they will be signed with their respective release keys.</li>
+<li>Detached signatures will then be committed to the <a href="https://github.com/bitcoin-core/bitcoin-detached-sigs">bitcoin-detached-sigs</a> repository, which can be combined with the unsigned apps to create signed binaries.</li>
+</ul>
+<p>Create (and optionally verify) the signed macOS binary:</p>
+<pre><code>pushd ./gitian-builder
+./bin/gbuild -i --commit signature=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+./bin/gsign --signer &quot;$SIGNER&quot; --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+mv build/out/bitcoin-osx-signed.dmg ../bitcoin-${VERSION}-osx.dmg
+popd
+</code></pre>
+<p>Create (and optionally verify) the signed Windows binaries:</p>
+<pre><code>pushd ./gitian-builder
+./bin/gbuild -i --commit signature=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+./bin/gsign --signer &quot;$SIGNER&quot; --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+mv build/out/bitcoin-*win64-setup.exe ../bitcoin-${VERSION}-win64-setup.exe
+popd
+</code></pre>
+<p>Commit your signature for the signed macOS/Windows binaries:</p>
+<pre><code>pushd gitian.sigs
+git add ${VERSION}-osx-signed/&quot;${SIGNER}&quot;
+git add ${VERSION}-win-signed/&quot;${SIGNER}&quot;
+git commit -m &quot;Add ${SIGNER} ${VERSION} signed binaries signatures&quot;
+git push  # Assuming you can push to the gitian.sigs tree
+popd
+</code></pre>
+<h3 id="after-3-or-more-people-have-gitian-built-and-their-results-match">After 3 or more people have gitian-built and their results match:</h3>
+<ul>
+<li>Create <code>SHA256SUMS.asc</code> for the builds, and GPG-sign it:</li>
+</ul>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb20-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
+<p>The list of files should be:</p>
+<pre><code>bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
+bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
+bitcoin-${VERSION}-riscv64-linux-gnu.tar.gz
+bitcoin-${VERSION}-x86_64-linux-gnu.tar.gz
+bitcoin-${VERSION}-osx64.tar.gz
+bitcoin-${VERSION}-osx.dmg
+bitcoin-${VERSION}.tar.gz
+bitcoin-${VERSION}-win64-setup.exe
+bitcoin-${VERSION}-win64.zip
+</code></pre>
+<p>The <code>*-debug*</code> files generated by the gitian build contain debug symbols for troubleshooting by developers. It is assumed that anyone that is interested in debugging can run gitian to generate the files for themselves. To avoid end-user confusion about which file to pick, as well as save storage space <em>do not upload these to the bitcoin.org server, nor put them in the torrent</em>.</p>
+<ul>
+<li>GPG-sign it, delete the unsigned file:</li>
+</ul>
+<pre><code>gpg --digest-algo sha256 --clearsign SHA256SUMS # outputs SHA256SUMS.asc
+rm SHA256SUMS
+</code></pre>
+<p>(the digest algorithm is forced to sha256 to avoid confusion of the <code>Hash:</code> header that GPG adds with the SHA256 used for the files) Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.</p>
+<ul>
+<li><p>Upload zips and installers, as well as <code>SHA256SUMS.asc</code> from last step, to the bitcoin.org server into <code>/var/www/bin/bitcoin-core-${VERSION}</code></p></li>
+<li><p>A <code>.torrent</code> will appear in the directory after a few minutes. Optionally help seed this torrent. To get the <code>magnet:</code> URI use:</p></li>
+</ul>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb23-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
+<p>Insert the magnet URI into the announcement sent to mailing lists. This permits people without access to <code>bitcoin.org</code> to download the binary distribution. Also put it into the <code>optional_magnetlink:</code> slot in the YAML file for bitcoin.org (see below for bitcoin.org update instructions).</p>
+<ul>
+<li><p>Update bitcoin.org version</p>
+<ul>
+<li><p>First, check to see if the Bitcoin.org maintainers have prepared a release: <a href="https://github.com/bitcoin-dot-org/bitcoin.org/labels/Core">https://github.com/bitcoin-dot-org/bitcoin.org/labels/Core</a></p>
+<ul>
+<li>If they have, it will have previously failed their Travis CI checks because the final release files weren't uploaded. Trigger a Travis CI rebuild---if it passes, merge.</li>
+</ul></li>
+<li><p>If they have not prepared a release, follow the Bitcoin.org release instructions: <a href="https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.html#release-notes">https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.html#release-notes</a></p></li>
+<li><p>After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well as update the OS download links.</p></li>
+</ul></li>
+<li><p>Update other repositories and websites for new version</p>
+<ul>
+<li><p>bitcoincore.org blog post</p></li>
+<li><p>bitcoincore.org maintained versions update: <a href="https://github.com/bitcoin-core/bitcoincore.org/commits/master/_includes/posts/maintenance-table.html">table</a></p></li>
+<li><p>bitcoincore.org RPC documentation update</p></li>
+<li><p>Update packaging repo</p>
+<ul>
+<li><p>Push the flatpak to flathub, e.g. <a href="https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2">https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2</a></p></li>
+<li><p>Push the latest version to master (if applicable), e.g. <a href="https://github.com/bitcoin-core/packaging/pull/32">https://github.com/bitcoin-core/packaging/pull/32</a></p></li>
+<li><p>Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the track (if applicable), e.g. <a href="https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7">https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7</a></p></li>
+<li><p>Notify MarcoFalke so that he can start building the snap package</p>
+<ul>
+<li><a href="https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging">https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging</a> (Click "Import Now" to fetch the branch)</li>
+<li><a href="https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging/+ref/0.xx">https://code.launchpad.net/~bitcoin-core/bitcoin-core-snap/+git/packaging/+ref/0.xx</a> (Click "Create snap package")</li>
+<li>Name it "bitcoin-core-snap-0.xx"</li>
+<li>Leave owner and series as-is</li>
+<li>Select architectures that are compiled via gitian</li>
+<li>Leave "automatically build when branch changes" unticked</li>
+<li>Tick "automatically upload to store"</li>
+<li>Put "bitcoin-core" in the registered store package name field</li>
+<li>Tick the "edge" box</li>
+<li>Put "0.xx" in the track field</li>
+<li>Click "create snap package"</li>
+<li>Click "Request builds" for every new release on this branch (after updating the snapcraft.yml in the branch to reflect the latest gitian results)</li>
+<li>Promote release on <a href="https://snapcraft.io/bitcoin-core/releases">https://snapcraft.io/bitcoin-core/releases</a> if it passes sanity checks</li>
+</ul></li>
+</ul></li>
+<li><p>This repo</p>
+<ul>
+<li><p>Archive the release notes for the new version to <code>doc/release-notes/</code> (branch <code>master</code> and branch of the release)</p></li>
+<li><p>Create a <a href="https://github.com/bitcoin/bitcoin/releases/new">new GitHub release</a> with a link to the archived release notes</p></li>
+</ul></li>
+</ul></li>
+<li><p>Announce the release:</p>
+<ul>
+<li><p>bitcoin-dev and bitcoin-core-dev mailing list</p></li>
+<li><p>Bitcoin Core announcements list <a href="https://bitcoincore.org/en/list/announcements/join/">https://bitcoincore.org/en/list/announcements/join/</a></p></li>
+<li><p>Update title of #bitcoin on Freenode IRC</p></li>
+<li><p>Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself</p></li>
+<li><p>Celebrate</p></li>
+</ul></li>
+</ul>
+<h3 id="additional-information">Additional information</h3>
+<h4 id="how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size">How to calculate <code>m_assumed_blockchain_size</code> and <code>m_assumed_chain_state_size</code></h4>
+<p>Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain. Note that all values should be taken from a <strong>fully synced</strong> node and have an overhead of 5-10% added on top of its base value.</p>
+<p>To calculate <code>m_assumed_blockchain_size</code>:</p>
+<ul>
+<li>For <code>mainnet</code> -&gt; Take the size of the data directory, excluding <code>/regtest</code> and <code>/testnet3</code> directories.</li>
+<li>For <code>testnet</code> -&gt; Take the size of the <code>/testnet3</code> directory.</li>
+</ul>
+<p>To calculate <code>m_assumed_chain_state_size</code>:</p>
+<ul>
+<li>For <code>mainnet</code> -&gt; Take the size of the <code>/chainstate</code> directory.</li>
+<li>For <code>testnet</code> -&gt; Take the size of the <code>/testnet3/chainstate</code> directory.</li>
+</ul>
+<p>Notes:</p>
+<ul>
+<li>When taking the size for <code>m_assumed_blockchain_size</code>, there's no need to exclude the <code>/chainstate</code> directory since it's a guideline value and an overhead will be added anyway.</li>
+<li>The expected overhead for growth may change over time, so it may not be the same value as last release; pay attention to that when changing the variables.</li>
+</ul>
+</body>
+</html>

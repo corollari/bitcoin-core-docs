@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>build-windows</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="windows-build-notes">WINDOWS BUILD NOTES</h1>
+<p>Below are some notes on how to build Bitcoin Core for Windows.</p>
+<p>The options known to work for building Bitcoin Core on Windows are:</p>
+<ul>
+<li>On Linux, using the <a href="https://mingw-w64.org/doku.php">Mingw-w64</a> cross compiler tool chain. Ubuntu Bionic 18.04 is required and is the platform used to build the Bitcoin Core Windows release binaries.</li>
+<li>On Windows, using <a href="https://docs.microsoft.com/windows/wsl/about">Windows Subsystem for Linux (WSL)</a> and the Mingw-w64 cross compiler tool chain.</li>
+<li>On Windows, using a native compiler tool chain such as <a href="https://www.visualstudio.com">Visual Studio</a>.</li>
+</ul>
+<p>Other options which may work, but which have not been extensively tested are (please contribute instructions):</p>
+<ul>
+<li>On Windows, using a POSIX compatibility layer application such as <a href="https://www.cygwin.com/">cygwin</a> or <a href="https://www.msys2.org/">msys2</a>.</li>
+</ul>
+<h2 id="installing-windows-subsystem-for-linux">Installing Windows Subsystem for Linux</h2>
+<p>With Windows 10, Microsoft has released a new feature named the <a href="https://docs.microsoft.com/windows/wsl/about">Windows Subsystem for Linux (WSL)</a>. This feature allows you to run a bash shell directly on Windows in an Ubuntu-based environment. Within this environment you can cross compile for Windows without the need for a separate Linux VM or server. Note that while WSL can be installed with other Linux variants, such as OpenSUSE, the following instructions have only been tested with Ubuntu.</p>
+<p>This feature is not supported in versions of Windows prior to Windows 10 or on Windows Server SKUs. In addition, it is available <a href="https://docs.microsoft.com/windows/wsl/install-win10">only for 64-bit versions of Windows</a>.</p>
+<p>Full instructions to install WSL are available on the above link. To install WSL on Windows 10 with Fall Creators Update installed (version &gt;= 16215.0) do the following:</p>
+<ol>
+<li>Enable the Windows Subsystem for Linux feature</li>
+</ol>
+<ul>
+<li>Open the Windows Features dialog (<code>OptionalFeatures.exe</code>)</li>
+<li>Enable 'Windows Subsystem for Linux'</li>
+<li>Click 'OK' and restart if necessary</li>
+</ul>
+<ol start="2">
+<li>Install Ubuntu</li>
+</ol>
+<ul>
+<li>Open Microsoft Store and search for "Ubuntu 18.04" or use <a href="https://www.microsoft.com/store/productId/9N9TNGVNDL3Q">this link</a></li>
+<li>Click Install</li>
+</ul>
+<ol start="3">
+<li>Complete Installation</li>
+</ol>
+<ul>
+<li>Open a .html prompt and type "Ubuntu1804"</li>
+<li>Create a new UNIX user account (this is a separate account from your Windows account)</li>
+</ul>
+<p>After the bash shell is active, you can follow the instructions below, starting with the "Cross-compilation" section. Compiling the 64-bit version is recommended, but it is possible to compile the 32-bit version.</p>
+<h2 id="cross-compilation-for-ubuntu-and-windows-subsystem-for-linux">Cross-compilation for Ubuntu and Windows Subsystem for Linux</h2>
+<p>The steps below can be performed on Ubuntu (including in a VM) or WSL. The depends system will also work on other Linux distributions, however the commands for installing the toolchain will be different.</p>
+<p>First, install the general dependencies:</p>
+<pre><code>sudo apt update
+sudo apt upgrade
+sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
+</code></pre>
+<p>A host toolchain (<code>build-essential</code>) is necessary because some dependency packages need to build host utilities that are used in the build process.</p>
+<p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
+<p>If you want to build the windows installer with <code>make deploy</code> you need <a href="https://nsis.sourceforge.io/Main_Page">NSIS</a>:</p>
+<pre><code>sudo apt install nsis
+</code></pre>
+<p>Acquire the source in the usual way:</p>
+<pre><code>git clone https://github.com/bitcoin/bitcoin.git
+cd bitcoin
+</code></pre>
+<h2 id="building-for-64-bit-windows">Building for 64-bit Windows</h2>
+<p>The first step is to install the mingw-w64 cross-compilation tool chain:</p>
+<pre><code>sudo apt install g++-mingw-w64-x86-64
+</code></pre>
+<p>Ubuntu Bionic 18.04 <sup><a href="#footnote1">1</a></sup>:</p>
+<pre><code>sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
+</code></pre>
+<p>Once the toolchain is installed the build steps are common:</p>
+<p>Note that for WSL the Bitcoin Core source path MUST be somewhere in the default mount file system, for example /usr/src/bitcoin, AND not under /mnt/d/. If this is not the case the dependency autoconf scripts will fail. This means you cannot use a directory that is located directly on the host Windows file system to perform the build.</p>
+<p>Build using:</p>
+<pre><code>PATH=$(echo &quot;$PATH&quot; | sed -e &#39;s/:\/mnt.*//g&#39;) # strip out problematic Windows %PATH% imported var
+cd depends
+make HOST=x86_64-w64-mingw32
+cd ..
+./autogen.sh # not required when building from tarball
+CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+make
+</code></pre>
+<h2 id="depends-system">Depends system</h2>
+<p>For further documentation on the depends system see <a href="../depends/README.html">README.html</a> in the depends directory.</p>
+<h2 id="installation">Installation</h2>
+<p>After building using the Windows subsystem it can be useful to copy the compiled executables to a directory on the Windows drive in the same directory structure as they appear in the release <code>.zip</code> archive. This can be done in the following way. This will install to <code>c:\workspace\bitcoin</code>, for example:</p>
+<pre><code>make install DESTDIR=/mnt/c/workspace/bitcoin
+</code></pre>
+<p>You can also create an installer using:</p>
+<pre><code>make deploy
+</code></pre>
+<h2 id="footnotes">Footnotes</h2>
+<p><a name="footnote1">1</a>: Starting from Ubuntu Xenial 16.04, both the 32 and 64 bit Mingw-w64 packages install two different compiler options to allow a choice between either posix or win32 threads. The default option is win32 threads which is the more efficient since it will result in binary code that links directly with the Windows kernel32.lib. Unfortunately, the headers required to support win32 threads conflict with some of the classes in the C++11 standard library, in particular std::mutex. It's not possible to build the Bitcoin Core code using the win32 version of the Mingw-w64 cross compilers (at least not without modifying headers in the Bitcoin Core source code).</p>
+</body>
+</html>

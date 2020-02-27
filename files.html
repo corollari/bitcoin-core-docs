@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>files</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="bitcoin-core-file-system">Bitcoin Core file system</h1>
+<p><strong>Contents</strong></p>
+<ul>
+<li><p><a href="#data-directory-location">Data directory location</a></p></li>
+<li><p><a href="#data-directory-layout">Data directory layout</a></p></li>
+<li><p><a href="#multi-wallet-environment">Multi-wallet environment</a></p></li>
+<li><p><a href="#gui-settings">GUI settings</a></p></li>
+<li><p><a href="#legacy-subdirectories-and-files">Legacy subdirectories and files</a></p></li>
+<li><p><a href="#notes">Notes</a></p></li>
+</ul>
+<h2 id="data-directory-location">Data directory location</h2>
+<p>The data directory is the default location where the Bitcoin Core files are stored.</p>
+<ol>
+<li>The default data directory paths for supported platforms are:</li>
+</ol>
+<table>
+<thead>
+<tr class="header">
+<th>Platform</th>
+<th>Data directory path</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Linux</td>
+<td><code>$HOME/.bitcoin/</code></td>
+</tr>
+<tr class="even">
+<td>macOS</td>
+<td><code>$HOME/Library/Application Support/Bitcoin/</code></td>
+</tr>
+<tr class="odd">
+<td>Windows</td>
+<td><code>%APPDATA%\Bitcoin\</code> <sup><a href="#note1">[1]</a></sup></td>
+</tr>
+</tbody>
+</table>
+<ol start="2">
+<li><p>The non-default data directory path can be specified by <code>-datadir</code> option.</p></li>
+<li><p>All content of the data directory, except for <code>bitcoin.conf</code> file, is chain-specific. This means the actual data directory paths for non-mainnet cases differ:</p></li>
+</ol>
+<table>
+<thead>
+<tr class="header">
+<th>Chain option</th>
+<th>Data directory path</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>no option (mainnet)</td>
+<td><em>path_to_datadir</em><code>/</code></td>
+</tr>
+<tr class="even">
+<td><code>-testnet</code></td>
+<td><em>path_to_datadir</em><code>/testnet3/</code></td>
+</tr>
+<tr class="odd">
+<td><code>-regtest</code></td>
+<td><em>path_to_datadir</em><code>/regtest/</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="data-directory-layout">Data directory layout</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Subdirectory</th>
+<th>File(s)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>blocks/</code></td>
+<td></td>
+<td>Blocks directory; can be specified by <code>-blocksdir</code> option (except for <code>blocks/index/</code>)</td>
+</tr>
+<tr class="even">
+<td><code>blocks/index/</code></td>
+<td>LevelDB database</td>
+<td>Block index; <code>-blocksdir</code> option does not affect this path</td>
+</tr>
+<tr class="odd">
+<td><code>blocks/</code></td>
+<td><code>blkNNNNN.dat</code><sup><a href="#note2">[2]</a></sup></td>
+<td>Actual Bitcoin blocks (in network format, dumped in raw on disk, 128 MiB per file)</td>
+</tr>
+<tr class="even">
+<td><code>blocks/</code></td>
+<td><code>revNNNNN.dat</code><sup><a href="#note2">[2]</a></sup></td>
+<td>Block undo data (custom format)</td>
+</tr>
+<tr class="odd">
+<td><code>chainstate/</code></td>
+<td>LevelDB database</td>
+<td>Blockchain state (a compact representation of all currently unspent transaction outputs and some metadata about the transactions they are from)</td>
+</tr>
+<tr class="even">
+<td><code>indexes/txindex/</code></td>
+<td>LevelDB database</td>
+<td>Transaction index; <em>optional</em>, used if <code>-txindex=1</code></td>
+</tr>
+<tr class="odd">
+<td><code>indexes/blockfilter/basic/db/</code></td>
+<td>LevelDB database</td>
+<td>Blockfilter index LevelDB database for the basic filtertype; <em>optional</em>, used if <code>-blockfilterindex=basic</code></td>
+</tr>
+<tr class="even">
+<td><code>indexes/blockfilter/basic/</code></td>
+<td><code>fltrNNNNN.dat</code><sup><a href="#note2">[2]</a></sup></td>
+<td>Blockfilter index filters for the basic filtertype; <em>optional</em>, used if <code>-blockfilterindex=basic</code></td>
+</tr>
+<tr class="odd">
+<td><code>wallets/</code></td>
+<td></td>
+<td><a href="#multi-wallet-environment">Contains wallets</a>; can be specified by <code>-walletdir</code> option; if <code>wallets/</code> subdirectory does not exist, a wallet resides in the data directory</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>banlist.dat</code></td>
+<td>Stores the IPs/subnets of banned nodes</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>bitcoin.conf</code></td>
+<td>Contains <a href="bitcoin-conf.html">configuration settings</a> for <code>bitcoind</code> or <code>bitcoin-qt</code>; can be specified by <code>-conf</code> option</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>bitcoind.pid</code></td>
+<td>Stores the process ID (PID) of <code>bitcoind</code> or <code>bitcoin-qt</code> while running; created at start and deleted on shutdown; can be specified by <code>-pid</code> option</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>debug.log</code></td>
+<td>Contains debug information and general logging generated by <code>bitcoind</code> or <code>bitcoin-qt</code>; can be specified by <code>-debuglogfile</code> option</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>fee_estimates.dat</code></td>
+<td>Stores statistics used to estimate minimum transaction fees and priorities required for confirmation</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>guisettings.ini.bak</code></td>
+<td>Backup of former <a href="#gui-settings">GUI settings</a> after <code>-resetguisettings</code> option is used</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>mempool.dat</code></td>
+<td>Dump of the mempool's transactions</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>onion_private_key</code></td>
+<td>Cached Tor hidden service private key for <code>-listenonion</code> option</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>peers.dat</code></td>
+<td>Peer IP address database (custom format)</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>.cookie</code></td>
+<td>Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by <code>-rpccookiefile</code> option</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>.lock</code></td>
+<td>Data directory lock file</td>
+</tr>
+</tbody>
+</table>
+<h2 id="multi-wallet-environment">Multi-wallet environment</h2>
+<p>Wallets are Berkeley DB (BDB) databases:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Subdirectory</th>
+<th>File(s)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>database/</code></td>
+<td>BDB logging files</td>
+<td>Part of BDB environment; created at start and deleted on shutdown; a user <em>must keep it as safe</em> as personal wallet <code>wallet.dat</code></td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>db.log</code></td>
+<td>BDB error file</td>
+</tr>
+<tr class="odd">
+<td><code>./</code></td>
+<td><code>wallet.dat</code></td>
+<td>Personal wallet (BDB) with keys and transactions</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
+<td><code>.walletlock</code></td>
+<td>Wallet lock file</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li><p>Each user-defined wallet named "wallet_name" resides in <code>wallets/wallet_name/</code> subdirectory.</p></li>
+<li><p>The default (unnamed) wallet resides in <code>wallets/</code> subdirectory; if the latter does not exist, the wallet resides in the data directory.</p></li>
+<li><p>A wallet database path can be specified by <code>-wallet</code> option.</p></li>
+</ol>
+<h2 id="gui-settings">GUI settings</h2>
+<p><code>bitcoin-qt</code> uses <a href="https://doc.qt.io/qt-5/qsettings.html"><code>QSettings</code></a> class; this implies platform-specific <a href="https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored">locations where application settings are stored</a>.</p>
+<h2 id="legacy-subdirectories-and-files">Legacy subdirectories and files</h2>
+<p>These subdirectories and files are no longer used by the Bitcoin Core:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Path</th>
+<th>Description</th>
+<th>Repository notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>blktree/</code></td>
+<td>Blockchain index; replaced by <code>blocks/index/</code> in <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.8.0.html#improvements">0.8.0</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/2231">PR #2231</a>, <a href="https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15"><code>8fdc94cc</code></a></td>
+</tr>
+<tr class="even">
+<td><code>coins/</code></td>
+<td>Unspent transaction output database; replaced by <code>chainstate/</code> in 0.8.0</td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/2231">PR #2231</a>, <a href="https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15"><code>8fdc94cc</code></a></td>
+</tr>
+<tr class="odd">
+<td><code>blkindex.dat</code></td>
+<td>Blockchain index BDB database; replaced by {<code>chainstate/</code>, <code>blocks/index/</code>, <code>blocks/revNNNNN.dat</code><sup><a href="#note2">[2]</a></sup>} in 0.8.0</td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/1677">PR #1677</a></td>
+</tr>
+<tr class="even">
+<td><code>blk000?.dat</code></td>
+<td>Block data (custom format, 2 GiB per file); replaced by <code>blocks/blkNNNNN.dat</code><sup><a href="#note2">[2]</a></sup> in 0.8.0</td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/1677">PR #1677</a></td>
+</tr>
+<tr class="odd">
+<td><code>addr.dat</code></td>
+<td>Peer IP address BDB database; replaced by <code>peers.dat</code> in <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.html">0.7.0</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/1198">PR #1198</a>, <a href="https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc"><code>928d3a01</code></a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="notes">Notes</h2>
+<p><a name="note1">1</a>. The <code>/</code> (slash, U+002F) is used as the platform-independent path component separator in this paper.</p>
+<p><a name="note2">2</a>. <code>NNNNN</code> matches <code>[0-9]{5}</code> regex.</p>
+</body>
+</html>

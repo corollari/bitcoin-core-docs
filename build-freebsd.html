@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>build-freebsd</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="freebsd-build-guide">FreeBSD build guide</h1>
+<p>(updated for FreeBSD 12.0)</p>
+<p>This guide describes how to build bitcoind and command-line utilities on FreeBSD.</p>
+<p>This guide does not contain instructions for building the GUI.</p>
+<h2 id="preparation">Preparation</h2>
+<p>You will need the following dependencies, which can be installed as root via pkg:</p>
+<pre class="shell"><code>pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
+
+git clone https://github.com/bitcoin/bitcoin.git
+</code></pre>
+<p>In order to run the test suite (recommended), you will need to have Python 3 installed:</p>
+<pre class="shell"><code>pkg install python3
+</code></pre>
+<p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
+<h3 id="building-berkeleydb">Building BerkeleyDB</h3>
+<p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
+<pre class="shell"><code>./contrib/install_db4.sh `pwd`
+export BDB_PREFIX=&quot;$PWD/db4&quot;
+</code></pre>
+<h2 id="building-bitcoin-core">Building Bitcoin Core</h2>
+<p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error):</p>
+<p>With wallet:</p>
+<pre class="shell"><code>./autogen.sh
+./configure --with-gui=no \
+    BDB_LIBS=&quot;-L${BDB_PREFIX}/lib -ldb_cxx-4.8&quot; \
+    BDB_CFLAGS=&quot;-I${BDB_PREFIX}/include&quot;
+</code></pre>
+<p>Without wallet:</p>
+<pre class="shell"><code>./autogen.sh
+./configure --with-gui=no --disable-wallet
+</code></pre>
+<p>followed by:</p>
+<pre class="shell"><code>gmake # use -jX here for parallelism
+gmake check # Run tests if Python 3 is available
+</code></pre>
+</body>
+</html>

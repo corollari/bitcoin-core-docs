@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>translation_process</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="translations">Translations</h1>
+<p>The Bitcoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Bitcoin-Core makes use of the Transifex online translation management tool.</p>
+<h3 id="helping-to-translate-using-transifex">Helping to translate (using Transifex)</h3>
+<p>Transifex is setup to monitor the GitHub repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.</p>
+<p>Multiple language support is critical in assisting Bitcoin’s global adoption, and growth. One of Bitcoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.</p>
+<p>See the <a href="https://www.transifex.com/bitcoin/bitcoin/">Transifex Bitcoin project</a> to assist in translations. You should also join the translation mailing list for announcements - see details below.</p>
+<h3 id="writing-code-with-translations">Writing code with translations</h3>
+<p>We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in <code>src/qt/locale/</code>. The translation source files must adhere to the following format: <code>bitcoin_xx_YY.ts or bitcoin_xx.ts</code></p>
+<p><code>src/qt/locale/bitcoin_en.ts</code> is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of <code>gettext</code>, so make sure that utility is installed (ie, <code>apt-get install gettext</code> on Ubuntu/Debian). Once this has been updated, <code>lupdate</code> (included in the Qt SDK) is used to update <code>bitcoin_en.ts</code>.</p>
+<p>To automatically regenerate the <code>bitcoin_en.ts</code> file, run the following commands:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="bu">cd</span> src/</a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
+<p><code>contrib/bitcoin-qt.pro</code> takes care of generating <code>.qm</code> (binary compiled) files from <code>.ts</code> (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.</p>
+<p><strong>Example Qt translation</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
+<h3 id="creating-a-pull-request">Creating a pull-request</h3>
+<p>For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.</p>
+<p>When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.</p>
+<p>To create the pull-request, use the following commands:</p>
+<pre><code>git add src/qt/bitcoinstrings.cpp src/qt/locale/bitcoin_en.ts
+git commit
+</code></pre>
+<h3 id="creating-a-transifex-account">Creating a Transifex account</h3>
+<p>Visit the <a href="https://www.transifex.com/signup/">Transifex Signup</a> page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.</p>
+<p>You can find the Bitcoin translation project at <a href="https://www.transifex.com/bitcoin/bitcoin/">https://www.transifex.com/bitcoin/bitcoin/</a>.</p>
+<h3 id="installing-the-transifex-client-command-line-tool">Installing the Transifex client command-line tool</h3>
+<p>The client is used to fetch updated translations. If you are having problems, or need more details, see <a href="https://docs.transifex.com/client/installing-the-client">https://docs.transifex.com/client/installing-the-client</a></p>
+<p><code>pip install transifex-client</code></p>
+<p>Setup your Transifex client config as follows. Please <em>ignore the token field</em>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb4-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
+<a class="sourceLine" id="cb4-2" title="2"></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
+<a class="sourceLine" id="cb4-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
+<p>The Transifex Bitcoin project config file is included as part of the repo. It can be found at <code>.tx/config</code>, however you shouldn’t need to change anything.</p>
+<h3 id="synchronising-translations">Synchronising translations</h3>
+<p>To assist in updating translations, a helper script is available in the <a href="https://github.com/bitcoin-core/bitcoin-maintainer-tools">maintainer-tools repo</a>.</p>
+<ol>
+<li><code>python3 ../bitcoin-maintainer-tools/update-translations.py</code></li>
+<li><code>git add</code> new translations from <code>src/qt/locale/</code></li>
+<li>Update <code>src/qt/bitcoin_locale.qrc</code> manually or via</li>
+</ol>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
+<ol start="4">
+<li>Update <code>src/Makefile.qt_locale.include</code> manually or via</li>
+</ol>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
+<p><strong>Do not directly download translations</strong> one by one from the Transifex website, as we do a few post-processing steps before committing the translations.</p>
+<h3 id="handling-plurals-in-source-files">Handling Plurals (in source files)</h3>
+<p>When new plurals are added to the source file, it's important to do the following steps:</p>
+<ol>
+<li>Open <code>bitcoin_en.ts</code> in Qt Linguist (included in the Qt SDK)</li>
+<li>Search for <code>%n</code>, which will take you to the parts in the translation that use plurals</li>
+<li>Look for empty <code>English Translation (Singular)</code> and <code>English Translation (Plural)</code> fields</li>
+<li>Add the appropriate strings for the singular and plural form of the base string</li>
+<li>Mark the item as done (via the green arrow symbol in the toolbar)</li>
+<li>Repeat from step 2, until all singular and plural forms are in the source file</li>
+<li>Save the source file</li>
+</ol>
+<h3 id="translating-a-new-language">Translating a new language</h3>
+<p>To create a new language template, you will need to edit the languages manifest file <code>src/qt/bitcoin_locale.qrc</code> and add a new entry. Below is an example of the English language entry.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb7-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
+<a class="sourceLine" id="cb7-3" title="3">    ...</a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
+<p><strong>Note:</strong> that the language translation file <strong>must end in <code>.qm</code></strong> (the compiled extension), and not <code>.ts</code>.</p>
+<h3 id="questions-and-general-assistance">Questions and general assistance</h3>
+<p>The Bitcoin-Core translation maintainers include <em>tcatm, seone, Diapolo, wumpus and luke-jr</em>. You can find them, and others, in the Freenode IRC chatroom - <code>irc.freenode.net #bitcoin-core-dev</code>.</p>
+<p>If you are a translator, you should also subscribe to the mailing list, <a href="https://groups.google.com/forum/#!forum/bitcoin-translators">https://groups.google.com/forum/#!forum/bitcoin-translators</a>. Announcements will be posted during application pre-releases to notify translators to check for updates.</p>
+</body>
+</html>

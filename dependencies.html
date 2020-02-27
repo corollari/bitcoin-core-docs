@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>dependencies</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="dependencies">Dependencies</h1>
+<p>These are the dependencies currently used by Bitcoin Core. You can find instructions for installing them in the <code>build-*.html</code> file for your platform.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Dependency</th>
+<th>Version used</th>
+<th>Minimum required</th>
+<th>CVEs</th>
+<th>Shared</th>
+<th><a href="https://doc.qt.io/qt-5/configure-options.html#third-party-libraries">Bundled Qt library</a></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Berkeley DB</td>
+<td><a href="https://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index.html">4.8.30</a></td>
+<td>4.8.x</td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Boost</td>
+<td><a href="https://www.boost.org/users/download/">1.70.0</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/8920">1.47.0</a></td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Clang</td>
+<td></td>
+<td><a href="https://releases.llvm.org/download.html">3.3+</a> (C++11 support)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Expat</td>
+<td><a href="https://libexpat.github.io/">2.2.7</a></td>
+<td></td>
+<td>No</td>
+<td>Yes</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>fontconfig</td>
+<td><a href="https://www.freedesktop.org/software/fontconfig/release/">2.12.1</a></td>
+<td></td>
+<td>No</td>
+<td>Yes</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>FreeType</td>
+<td><a href="https://download.savannah.gnu.org/releases/freetype">2.7.1</a></td>
+<td></td>
+<td>No</td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a> (Android only)</td>
+</tr>
+<tr class="odd">
+<td>GCC</td>
+<td></td>
+<td><a href="https://gcc.gnu.org/">4.8+</a> (C++11 support)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>HarfBuzz-NG</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a></td>
+</tr>
+<tr class="odd">
+<td>libevent</td>
+<td><a href="https://github.com/libevent/libevent/releases">2.1.11-stable</a></td>
+<td>2.0.22</td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>libpng</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a></td>
+</tr>
+<tr class="odd">
+<td>librsvg</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>MiniUPnPc</td>
+<td><a href="https://miniupnp.tuxfamily.org/files">2.0.20180203</a></td>
+<td></td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>PCRE</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a></td>
+</tr>
+<tr class="even">
+<td>Python (tests)</td>
+<td></td>
+<td><a href="https://www.python.org/downloads">3.5</a></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>qrencode</td>
+<td><a href="https://fukuchi.org/works/qrencode">3.4.4</a></td>
+<td></td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Qt</td>
+<td><a href="https://download.qt.io/official_releases/qt/">5.9.8</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/issues/13478">5.5.1</a></td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>XCB</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a> (Linux only)</td>
+</tr>
+<tr class="even">
+<td>xkbcommon</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a> (Linux only)</td>
+</tr>
+<tr class="odd">
+<td>ZeroMQ</td>
+<td><a href="https://github.com/zeromq/libzmq/releases">4.3.1</a></td>
+<td>4.0.0</td>
+<td>No</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>zlib</td>
+<td><a href="https://zlib.net/">1.2.11</a></td>
+<td></td>
+<td></td>
+<td></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h2 id="controlling-dependencies">Controlling dependencies</h2>
+<p>Some dependencies are not needed in all configurations. The following are some factors that affect the dependency list.</p>
+<h4 id="options-passed-to-configure">Options passed to <code>./configure</code></h4>
+<ul>
+<li>MiniUPnPc is not needed with <code>--with-miniupnpc=no</code>.</li>
+<li>Berkeley DB is not needed with <code>--disable-wallet</code>.</li>
+<li>Qt is not needed with <code>--without-gui</code>.</li>
+<li>If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass <code>--with-qrencode</code>.</li>
+<li>ZeroMQ is needed only with the <code>--with-zmq</code> option.</li>
+</ul>
+<h4 id="other">Other</h4>
+<ul>
+<li>librsvg is only needed if you need to run <code>make deploy</code> on (cross-compilation to) macOS.</li>
+</ul>
+</body>
+</html>

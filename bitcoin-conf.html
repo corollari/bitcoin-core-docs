@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>bitcoin-conf</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="bitcoinconf-configuration-file"><code>bitcoin.conf</code> Configuration File</h1>
+<p>The configuration file is used by <code>bitcoind</code>, <code>bitcoin-qt</code> and <code>bitcoin-cli</code>.</p>
+<p>All command-line options (except for <code>-?</code>, <code>-help</code>, <code>-version</code> and <code>-conf</code>) may be specified in a configuration file, and all configuration file options (except for <code>includeconf</code>) may also be specified on the command line. Command-line options override values set in the configuration file and configuration file options override values set in the GUI.</p>
+<h2 id="configuration-file-format">Configuration File Format</h2>
+<p>The configuration file is a plain text file and consists of <code>option=value</code> entries, one per line. Leading and trailing whitespaces are removed.</p>
+<p>In contrast to the command-line usage:</p>
+<ul>
+<li>an option must be specified without leading <code>-</code>;</li>
+<li>a value of the given option is mandatory; e.g., <code>testnet=1</code> (for chain selection options), <code>noconnect=1</code> (for negated options).</li>
+</ul>
+<h3 id="blank-lines">Blank lines</h3>
+<p>Blank lines are allowed and ignored by the parser.</p>
+<h3 id="comments">Comments</h3>
+<p>A comment starts with a number sign (<code>#</code>) and extends to the end of the line. All comments are ignored by the parser.</p>
+<p>Comments may appear in two ways:</p>
+<ul>
+<li>on their own on an otherwise empty line (<em>preferable</em>);</li>
+<li>after an <code>option=value</code> entry.</li>
+</ul>
+<h3 id="network-specific-options">Network specific options</h3>
+<p>Network specific options can be:</p>
+<ul>
+<li>placed into sections with headers <code>[main]</code> (not <code>[mainnet]</code>), <code>[test]</code> (not <code>[testnet]</code>) or <code>[regtest]</code>;</li>
+<li>prefixed with a chain name; e.g., <code>regtest.maxmempool=100</code>.</li>
+</ul>
+<p>Network specific options take precedence over non-network specific options. If multiple values for the same option are found with the same precedence, the first one is generally chosen.</p>
+<p>This means that given the following configuration, <code>regtest.rpcport</code> is set to <code>3000</code>:</p>
+<pre><code>regtest=1
+rpcport=2000
+regtest.rpcport=3000
+
+[regtest]
+rpcport=4000
+</code></pre>
+<h2 id="configuration-file-path">Configuration File Path</h2>
+<p>The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is <code>bitcoin.conf</code> and it is located in the Bitcoin data directory, but both the Bitcoin data directory and the configuration file path may be changed using the <code>-datadir</code> and <code>-conf</code> command-line options.</p>
+<p>The <code>includeconf=&lt;file&gt;</code> option in the <code>bitcoin.conf</code> file can be used to include additional configuration files.</p>
+<h3 id="default-configuration-file-locations">Default configuration file locations</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Operating System</th>
+<th>Data Directory</th>
+<th>Example Path</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Windows</td>
+<td><code>%APPDATA%\Bitcoin\</code></td>
+<td><code>C:\Users\username\AppData\Roaming\Bitcoin\bitcoin.conf</code></td>
+</tr>
+<tr class="even">
+<td>Linux</td>
+<td><code>$HOME/.bitcoin/</code></td>
+<td><code>/home/username/.bitcoin/bitcoin.conf</code></td>
+</tr>
+<tr class="odd">
+<td>macOS</td>
+<td><code>$HOME/Library/Application Support/Bitcoin/</code></td>
+<td><code>/Users/username/Library/Application Support/Bitcoin/bitcoin.conf</code></td>
+</tr>
+</tbody>
+</table>
+<p>You can find an example bitcoin.conf file in <a href="../share/examples/bitcoin.conf">share/examples/bitcoin.conf</a>.</p>
+</body>
+</html>

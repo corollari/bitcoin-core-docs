@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>benchmarking</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="benchmarking">Benchmarking</h1>
+<p>Bitcoin Core has an internal benchmarking framework, with benchmarks for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection, thread queue, wallet balance.</p>
+<h2 id="running">Running</h2>
+<p>For benchmarks purposes you only need to compile <code>bitcoin_bench</code>. Beware of configuring without <code>--enable-debug</code> as this would impact benchmarking by unlatching log printers and lock analysis.</p>
+<pre><code>make -C src bitcoin_bench
+</code></pre>
+<p>After compiling bitcoin-core, the benchmarks can be run with:</p>
+<pre><code>src/bench/bench_bitcoin
+</code></pre>
+<p>The output will look similar to:</p>
+<pre><code># Benchmark, evals, iterations, total, min, max, median
+AssembleBlock, 5, 700, 1.79954, 0.000510913, 0.000517018, 0.000514497
+...
+</code></pre>
+<h2 id="help">Help</h2>
+<pre><code>src/bench/bench_bitcoin --help
+</code></pre>
+<p>To print options like scaling factor or per-benchmark filter.</p>
+<h2 id="notes">Notes</h2>
+<p>More benchmarks are needed for, in no particular order:</p>
+<ul>
+<li>Script Validation</li>
+<li>Coins database</li>
+<li>Memory pool</li>
+<li>Cuckoo Cache</li>
+<li>P2P throughput</li>
+</ul>
+<h2 id="going-further">Going Further</h2>
+<p>To monitor Bitcoin Core performance more in depth (like reindex or IBD): <a href="https://github.com/chaincodelabs/bitcoinperf">https://github.com/chaincodelabs/bitcoinperf</a></p>
+<p>To generate Flame Graphs for Bitcoin Core: <a href="https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.html">https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.html</a></p>
+</body>
+</html>

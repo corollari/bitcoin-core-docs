@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>fuzzing</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="fuzz-testing-bitcoin-core">Fuzz-testing Bitcoin Core</h1>
+<p>A special test harness in <code>src/test/fuzz/</code> is provided for each fuzz target to provide an easy entry point for fuzzers and the like. In this document we'll describe how to use it with AFL and libFuzzer.</p>
+<h2 id="preparing-fuzzing">Preparing fuzzing</h2>
+<p>The fuzzer needs some inputs to work on, but the inputs or seeds can be used interchangeably between libFuzzer and AFL.</p>
+<p>Extract the example seeds (or other starting inputs) into the inputs directory before starting fuzzing.</p>
+<pre><code>git clone https://github.com/bitcoin-core/qa-assets
+export DIR_FUZZ_IN=$PWD/qa-assets/fuzz_seed_corpus
+</code></pre>
+<p>AFL needs an input directory with examples, and an output directory where it will place examples that it found. These can be anywhere in the file system, we'll define environment variables to make it easy to reference them.</p>
+<p>So, only for AFL you need to configure the outputs path:</p>
+<pre><code>mkdir outputs
+export AFLOUT=$PWD/outputs
+</code></pre>
+<p>libFuzzer will use the input directory as output directory.</p>
+<h2 id="afl">AFL</h2>
+<h3 id="building-afl">Building AFL</h3>
+<p>It is recommended to always use the latest version of afl:</p>
+<pre><code>wget http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz
+tar -zxvf afl-latest.tgz
+cd afl-&lt;version&gt;
+make
+export AFLPATH=$PWD
+</code></pre>
+<p>For macOS you may need to ignore x86 compilation checks when running <code>make</code>: <code>AFL_NO_X86=1 make</code>.</p>
+<h3 id="instrumentation">Instrumentation</h3>
+<p>To build Bitcoin Core using AFL instrumentation (this assumes that the <code>AFLPATH</code> was set as above):</p>
+<pre><code>./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
+export AFL_HARDEN=1
+make
+</code></pre>
+<p>If you are using clang you will need to substitute <code>afl-gcc</code> with <code>afl-clang</code> and <code>afl-g++</code> with <code>afl-clang++</code>, so the first line above becomes:</p>
+<pre><code>./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-clang CXX=${AFLPATH}/afl-clang++
+</code></pre>
+<p>We disable ccache because we don't want to pollute the ccache with instrumented objects, and similarly don't want to use non-instrumented cached objects linked in.</p>
+<p>The fuzzing can be sped up significantly (~200x) by using <code>afl-clang-fast</code> and <code>afl-clang-fast++</code> in place of <code>afl-gcc</code> and <code>afl-g++</code> when compiling. When compiling using <code>afl-clang-fast</code>/<code>afl-clang-fast++</code> the resulting binary will be instrumented in such a way that the AFL features "persistent mode" and "deferred forkserver" can be used. See <a href="https://github.com/google/AFL/tree/master/llvm_mode">https://github.com/google/AFL/tree/master/llvm_mode</a> for details.</p>
+<h3 id="fuzzing">Fuzzing</h3>
+<p>To start the actual fuzzing use:</p>
+<pre><code>export FUZZ_TARGET=bech32  # Pick a fuzz_target
+mkdir ${AFLOUT}/${FUZZ_TARGET}
+$AFLPATH/afl-fuzz -i ${DIR_FUZZ_IN}/${FUZZ_TARGET} -o ${AFLOUT}/${FUZZ_TARGET} -m52 -- src/test/fuzz/${FUZZ_TARGET}
+</code></pre>
+<p>You may have to change a few kernel parameters to test optimally - <code>afl-fuzz</code> will print an error and suggestion if so.</p>
+<p>On macOS you may need to set <code>AFL_NO_FORKSRV=1</code> to get the target to run.</p>
+<pre><code>export FUZZ_TARGET=bech32  # Pick a fuzz_target
+mkdir ${AFLOUT}/${FUZZ_TARGET}
+AFL_NO_FORKSRV=1 $AFLPATH/afl-fuzz -i ${DIR_FUZZ_IN}/${FUZZ_TARGET} -o ${AFLOUT}/${FUZZ_TARGET} -m52 -- src/test/fuzz/${FUZZ_TARGET}
+</code></pre>
+<h2 id="libfuzzer">libFuzzer</h2>
+<p>A recent version of <code>clang</code>, the address/undefined sanitizers (ASan/UBSan) and libFuzzer is needed (all found in the <code>compiler-rt</code> runtime libraries package).</p>
+<p>To build all fuzz targets with libFuzzer, run</p>
+<pre><code>./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
+make
+</code></pre>
+<p>See <a href="https://llvm.org/docs/LibFuzzer.html#running">https://llvm.org/docs/LibFuzzer.html#running</a> on how to run the libFuzzer instrumented executable.</p>
+<p>Alternatively, you can run the script through the fuzzing test harness (only libFuzzer supported so far). You need to pass it the inputs directory and the specific test target you want to run.</p>
+<pre><code>./test/fuzz/test_runner.py ${DIR_FUZZ_IN} bech32
+</code></pre>
+<h3 id="macos-hints-for-libfuzzer">macOS hints for libFuzzer</h3>
+<p>The default clang/llvm version supplied by Apple on macOS does not include fuzzing libraries, so macOS users will need to install a full version, for example using <code>brew install llvm</code>.</p>
+<p>Should you run into problems with the address sanitizer, it is possible you may need to run <code>./configure</code> with <code>--disable-asm</code> to avoid errors with certain assembly code from Bitcoin Core's code. See <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/developer-notes.html#sanitizers">developer notes on sanitizers</a> for more information.</p>
+<p>You may also need to take care of giving the correct path for clang and clang++, like <code>CC=/path/to/clang CXX=/path/to/clang++</code> if the non-systems clang does not come first in your path.</p>
+<p>Full configure that was tested on macOS Catalina with <code>brew</code> installed <code>llvm</code>:</p>
+<pre><code>./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
+</code></pre>
+</body>
+</html>

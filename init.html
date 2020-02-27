@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>init</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="sample-init-scripts-and-service-configuration-for-bitcoind">Sample init scripts and service configuration for bitcoind</h1>
+<p>Sample scripts and configuration files for syst.html, Upstart and OpenRC can be found in the contrib/init folder.</p>
+<pre><code>contrib/init/bitcoind.service:    syst.html service unit configuration
+contrib/init/bitcoind.openrc:     OpenRC compatible SysV style init script
+contrib/init/bitcoind.openrcconf: OpenRC conf.d file
+contrib/init/bitcoind.conf:       Upstart service configuration file
+contrib/init/bitcoind.init:       CentOS compatible SysV style init script
+</code></pre>
+<h2 id="service-user">Service User</h2>
+<p>All three Linux startup configurations assume the existence of a "bitcoin" user and group. They must be created before attempting to use these scripts. The macOS configuration assumes bitcoind will be set up for the current user.</p>
+<h2 id="configuration">Configuration</h2>
+<p>At a bare minimum, bitcoind requires that the rpcpassword setting be set when running as a daemon. If the configuration file does not exist or this setting is not set, bitcoind will shut down promptly after startup.</p>
+<p>This password does not have to be remembered or typed as it is mostly used as a fixed token that bitcoind and client programs read from the configuration file, however it is recommended that a strong and secure password be used as this password is security critical to securing the wallet should the wallet be enabled.</p>
+<p>If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set, it will use a special cookie file for authentication. The cookie is generated with random content when the daemon starts, and deleted when it exits. Read access to this file controls who can access it through RPC.</p>
+<p>By default the cookie is stored in the data directory, but it's location can be overridden with the option '-rpccookiefile'.</p>
+<p>This allows for running bitcoind without having to do any manual configuration.</p>
+<p><code>conf</code>, <code>pid</code>, and <code>wallet</code> accept relative paths which are interpreted as relative to the data directory. <code>wallet</code> <em>only</em> supports relative paths.</p>
+<p>For an example configuration file that describes the configuration settings, see <code>share/examples/bitcoin.conf</code>.</p>
+<h2 id="paths">Paths</h2>
+<h3 id="linux">Linux</h3>
+<p>All three configurations assume several paths that might need to be adjusted.</p>
+<p>Binary: <code>/usr/bin/bitcoind</code> Configuration file: <code>/etc/bitcoin/bitcoin.conf</code> Data directory: <code>/var/lib/bitcoind</code> PID file: <code>/var/run/bitcoind/bitcoind.pid</code> (OpenRC and Upstart) or <code>/run/bitcoind/bitcoind.pid</code> (syst.html) Lock file: <code>/var/lock/subsys/bitcoind</code> (CentOS)</p>
+<p>The PID directory (if applicable) and data directory should both be owned by the bitcoin user and group. It is advised for security reasons to make the configuration file and data directory only readable by the bitcoin user and group. Access to bitcoin-cli and other bitcoind rpc clients can then be controlled by group membership.</p>
+<p>NOTE: When using the syst.html .service file, the creation of the aforementioned directories and the setting of their permissions is automatically handled by syst.html. Directories are given a permission of 710, giving the bitcoin group access to files under it <em>if</em> the files themselves give permission to the bitcoin group to do so (e.g. when <code>-sysperms</code> is specified). This does not allow for the listing of files under the directory.</p>
+<p>NOTE: It is not currently possible to override <code>datadir</code> in <code>/etc/bitcoin/bitcoin.conf</code> with the current syst.html, OpenRC, and Upstart init files out-of-the-box. This is because the command line options specified in the init files take precedence over the configurations in <code>/etc/bitcoin/bitcoin.conf</code>. However, some init systems have their own configuration mechanisms that would allow for overriding the command line options specified in the init files (e.g. setting <code>BITCOIND_DATADIR</code> for OpenRC).</p>
+<h3 id="macos">macOS</h3>
+<p>Binary: <code>/usr/local/bin/bitcoind</code> Configuration file: <code>~/Library/Application Support/Bitcoin/bitcoin.conf</code> Data directory: <code>~/Library/Application Support/Bitcoin</code> Lock file: <code>~/Library/Application Support/Bitcoin/.lock</code></p>
+<h2 id="installing-service-configuration">Installing Service Configuration</h2>
+<h3 id="systhtml">syst.html</h3>
+<p>Installing this .service file consists of just copying it to /usr/lib/syst.html/system directory, followed by the command <code>systemctl daemon-reload</code> in order to update running syst.html configuration.</p>
+<p>To test, run <code>systemctl start bitcoind</code> and to enable for system startup run <code>systemctl enable bitcoind</code></p>
+<p>NOTE: When installing for syst.html in Debian/Ubuntu the .service file needs to be copied to the /lib/syst.html/system directory instead.</p>
+<h3 id="openrc">OpenRC</h3>
+<p>Rename bitcoind.openrc to bitcoind and drop it in /etc/init.d. Double check ownership and permissions and make it executable. Test it with <code>/etc/init.d/bitcoind start</code> and configure it to run on startup with <code>rc-update add bitcoind</code></p>
+<h3 id="upstart-for-debianubuntu-based-distributions">Upstart (for Debian/Ubuntu based distributions)</h3>
+<p>Upstart is the default init system for Debian/Ubuntu versions older than 15.04. If you are using version 15.04 or newer and haven't manually configured upstart you should follow the syst.html instructions instead.</p>
+<p>Drop bitcoind.conf in /etc/init. Test by running <code>service bitcoind start</code> it will automatically start on reboot.</p>
+<p>NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they use old versions of Upstart and do not supply the start-stop-daemon utility.</p>
+<h3 id="centos">CentOS</h3>
+<p>Copy bitcoind.init to /etc/init.d/bitcoind. Test by running <code>service bitcoind start</code>.</p>
+<p>Using this script, you can adjust the path and flags to the bitcoind program by setting the BITCOIND and FLAGS environment variables in the file /etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.</p>
+<h3 id="macos-1">macOS</h3>
+<p>Copy org.bitcoin.bitcoind.plist into ~/Library/LaunchAgents. Load the launch agent by running <code>launchctl load ~/Library/LaunchAgents/org.bitcoin.bitcoind.plist</code>.</p>
+<p>This Launch Agent will cause bitcoind to start whenever the user logs in.</p>
+<p>NOTE: This approach is intended for those wanting to run bitcoind as the current user. You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a Launch Daemon with a dedicated bitcoin user.</p>
+<h2 id="auto-respawn">Auto-respawn</h2>
+<p>Auto respawning is currently only configured for Upstart and syst.html. Reasonable defaults have been chosen but YMMV.</p>
+</body>
+</html>

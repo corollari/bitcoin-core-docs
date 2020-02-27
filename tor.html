@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>tor</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="tor-support-in-bitcoin">TOR SUPPORT IN BITCOIN</h1>
+<p>It is possible to run Bitcoin Core as a Tor hidden service, and connect to such services.</p>
+<p>The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See <a href="https://www.torproject.org/docs/faq.html.en#TBBSocksPort">Tor Project FAQ:TBBSocksPort</a> for how to properly configure Tor.</p>
+<h2 id="1-run-bitcoin-core-behind-a-tor-proxy">1. Run Bitcoin Core behind a Tor proxy</h2>
+<p>The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all outgoing connections, but more is possible.</p>
+<pre><code>-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
+                server will be used to try to reach .onion addresses as well.
+
+-onion=ip:port  Set the proxy server to use for Tor hidden services. You do not
+                need to set this if it&#39;s the same as -proxy. You can use -noonion
+                to explicitly disable access to hidden services.
+
+-listen         When using -proxy, listening is disabled by default. If you want
+                to run a hidden service (see next section), you&#39;ll need to enable
+                it explicitly.
+
+-connect=X      When behind a Tor proxy, you can specify .onion addresses instead
+-addnode=X      of IP addresses or hostnames in these parameters. It requires
+-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
+                other P2P nodes.
+
+-onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
+                connections are not affected by this option. This option can be
+                specified multiple times to allow multiple network types, e.g.
+                ipv4, ipv6, or onion.
+</code></pre>
+<p>In a typical situation, this suffices to run behind a Tor proxy:</p>
+<pre><code>./bitcoind -proxy=127.0.0.1:9050
+</code></pre>
+<h2 id="2-run-a-bitcoin-core-hidden-server">2. Run a Bitcoin Core hidden server</h2>
+<p>If you configure your Tor system accordingly, it is possible to make your node also reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent config file): <em>Needed for Tor version 0.2.7.0 and older versions of Tor only. For newer versions of Tor see <a href="#3-automatically-listen-on-tor">Section 3</a>.</em></p>
+<pre><code>HiddenServiceDir /var/lib/tor/bitcoin-service/
+HiddenServicePort 8333 127.0.0.1:8333
+HiddenServicePort 18333 127.0.0.1:18333
+</code></pre>
+<p>The directory can be different of course, but (both) port numbers should be equal to your bitcoind's P2P listen port (8333 by default).</p>
+<pre><code>-externalip=X   You can tell bitcoin about its publicly reachable address using
+                this option, and this can be a .onion address. Given the above
+                configuration, you can find your .onion address in
+                /var/lib/tor/bitcoin-service/hostname. For connections
+                coming from unroutable addresses (such as 127.0.0.1, where the
+                Tor proxy typically runs), .onion addresses are given
+                preference for your node to advertise itself with.
+
+-listen         You&#39;ll need to enable listening for incoming connections, as this
+                is off by default behind a proxy.
+
+-discover       When -externalip is specified, no attempt is made to discover local
+                IPv4 or IPv6 addresses. If you want to run a dual stack, reachable
+                from both Tor and IPv4 (or IPv6), you&#39;ll need to either pass your
+                other addresses using -externalip, or explicitly enable -discover.
+                Note that both addresses of a dual-stack system may be easily
+                linkable using traffic analysis.
+</code></pre>
+<p>In a typical situation, where you're only reachable via Tor, this should suffice:</p>
+<pre><code>./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+</code></pre>
+<p>(obviously, replace the .onion address with your own). It should be noted that you still listen on all devices and another node could establish a clearnet connection, when knowing your address. To mitigate this, additionally bind the address of your Tor proxy:</p>
+<pre><code>./bitcoind ... -bind=127.0.0.1
+</code></pre>
+<p>If you don't care too much about hiding your node, and want to be reachable on IPv4 as well, use <code>discover</code> instead:</p>
+<pre><code>./bitcoind ... -discover
+</code></pre>
+<p>and open port 8333 on your firewall (or use -upnp).</p>
+<p>If you only want to use Tor to reach .onion addresses, but not use it as a proxy for normal IPv4/IPv6 communication, use:</p>
+<pre><code>./bitcoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+</code></pre>
+<h2 id="3-automatically-listen-on-tor">3. Automatically listen on Tor</h2>
+<p>Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket API, to create and destroy 'ephemeral' hidden services programmatically. Bitcoin Core has been updated to make use of this.</p>
+<p>This means that if Tor is running (and proper authentication has been configured), Bitcoin Core automatically creates a hidden service to listen on. This will positively affect the number of available .onion nodes.</p>
+<p>This new feature is enabled by default if Bitcoin Core is listening (<code>-listen</code>), and requires a Tor connection to work. It can be explicitly disabled with <code>-listenonion=0</code> and, if not disabled, configured using the <code>-torcontrol</code> and <code>-torpassword</code> settings. To show verbose debugging information, pass <code>-debug=tor</code>.</p>
+<p>Connecting to Tor's control socket API requires one of two authentication methods to be configured. It also requires the control socket to be enabled, e.g. put <code>ControlPort 9051</code> in <code>torrc</code> config file. For cookie authentication the user running bitcoind must have read access to the <code>CookieAuthFile</code> specified in Tor configuration. In some cases this is preconfigured and the creation of a hidden service is automatic. If permission problems are seen with <code>-debug=tor</code> they can be resolved by adding both the user running Tor and the user running bitcoind to the same group and setting permissions appropriately. On Debian-based systems the user running bitcoind can be added to the debian-tor group, which has the appropriate permissions. Before starting bitcoind you will need to re-login to allow debian-tor group to be applied. Otherwise you will see the following notice: "tor: Authentication cookie /run/tor/control.authcookie could not be opened (check permissions)" on debug.log.</p>
+<p>An alternative authentication method is the use of the <code>-torpassword=password</code> option. The <code>password</code> is the clear text form that was used when generating the hashed password for the <code>HashedControlPassword</code> option in the tor configuration file. The hashed password can be obtained with the command <code>tor --hash-password password</code> (read the tor manual for more details).</p>
+<h2 id="4-privacy-recommendations">4. Privacy recommendations</h2>
+<ul>
+<li>Do not add anything but Bitcoin Core ports to the hidden service created in section 2. If you run a web service too, create a new hidden service for that. Otherwise it is trivial to link them, which may reduce privacy. Hidden services created automatically (as in section 3) always have only one port open.</li>
+</ul>
+</body>
+</html>

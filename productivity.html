@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>productivity</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style>
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="productivity-notes">Productivity Notes</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#general">General</a>
+<ul>
+<li><a href="#cache-compilations-with-ccache">Cache compilations with <code>ccache</code></a></li>
+<li><a href="#disable-features-with-configure">Disable features with <code>./configure</code></a></li>
+<li><a href="#make-use-of-your-threads-with-make--j">Make use of your threads with <code>make -j</code></a></li>
+<li><a href="#only-build-what-you-need">Only build what you need</a></li>
+<li><a href="#multiple-working-directories-with-git-worktrees">Multiple working directories with <code>git worktrees</code></a></li>
+<li><a href="#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base">Interactive "dummy rebases" for fixups and execs with <code>git merge-base</code></a></li>
+</ul></li>
+<li><a href="#writing-code">Writing code</a>
+<ul>
+<li><a href="#format-ccprotobuf-diffs-with-clang-format-diffpy">Format C/C++/Protobuf diffs with <code>clang-format-diff.py</code></a></li>
+<li><a href="#format-python-diffs-with-yapf-diffpy">Format Python diffs with <code>yapf-diff.py</code></a></li>
+</ul></li>
+<li><a href="#rebasingmerging-code">Rebasing/Merging code</a>
+<ul>
+<li><a href="#more-conflict-context-with-mergeconflictstyle-diff3">More conflict context with <code>merge.conflictstyle diff3</code></a></li>
+</ul></li>
+<li><a href="#reviewing-code">Reviewing code</a>
+<ul>
+<li><a href="#reduce-mental-load-with-git-diff-options">Reduce mental load with <code>git diff</code> options</a></li>
+<li><a href="#reference-prs-easily-with-refspecs">Reference PRs easily with <code>refspec</code>s</a></li>
+<li><a href="#diff-the-diffs-with-git-range-diff">Diff the diffs with <code>git range-diff</code></a></li>
+</ul></li>
+</ul>
+<h2 id="general">General</h2>
+<h3 id="cache-compilations-with-ccache">Cache compilations with <code>ccache</code></h3>
+<p>The easiest way to faster compile times is to cache compiles. <code>ccache</code> is a way to do so, from its description at the time of writing:</p>
+<blockquote>
+<p>ccache is a compiler cache. It speeds up recompilation by caching the result of previous compilations and detecting when the same compilation is being done again. Supported languages are C, C++, Objective-C and Objective-C++.</p>
+</blockquote>
+<p>Install <code>ccache</code> through your distribution's package manager, and run <code>./configure</code> with your normal flags to pick it up.</p>
+<p>To use ccache for all your C/C++ projects, follow the symlinks method <a href="https://ccache.samba.org/manual/latest.html#_run_modes">here</a> to set it up.</p>
+<p>To get the most out of ccache, put something like this in <code>~/.ccache/ccache.conf</code>:</p>
+<pre><code>max_size = 50.0G  # or whatever cache size you prefer; default is 5G; 0 means unlimited
+base_dir = /home/yourname  # or wherever you keep your source files
+</code></pre>
+<p>Note: base_dir is required for ccache to share cached compiles of the same file across different repositories / paths; it will only do this for paths under base_dir. So this option is required for effective use of ccache with git worktrees (described below).</p>
+<p>You <em>must not</em> set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).</p>
+<h3 id="disable-features-with-configure">Disable features with <code>./configure</code></h3>
+<p>After running <code>./autogen.sh</code>, which generates the <code>./configure</code> file, use <code>./configure --help</code> to identify features that you can disable to save on compilation time. A few common flags:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">--without-miniupnpc</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="ex">--disable-bench</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="ex">--disable-wallet</span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="ex">--without-gui</span></a></code></pre></div>
+<p>If you do need the wallet enabled, it is common for devs to add <code>--with-incompatible-bdb</code>. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.</p>
+<h3 id="make-use-of-your-threads-with-make--j">Make use of your threads with <code>make -j</code></h3>
+<p>If you have multiple threads on your machine, you can tell <code>make</code> to utilize all of them with:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="fu">make</span> -j<span class="st">&quot;</span><span class="va">$(($(</span><span class="ex">nproc</span><span class="va">)</span>+1<span class="va">))</span><span class="st">&quot;</span></a></code></pre></div>
+<h3 id="only-build-what-you-need">Only build what you need</h3>
+<p>When rebuilding during development, note that running <code>make</code>, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).</p>
+<p>Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">make</span> src/bitcoind src/bitcoin-cli</a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="fu">make</span> src/qt/bitcoin-qt</a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="fu">make</span> -C src bitcoin_bench</a></code></pre></div>
+<p>(You can and should combine this with <code>-j</code>, as above, for a parallel build.)</p>
+<h3 id="multiple-working-directories-with-git-worktrees">Multiple working directories with <code>git worktrees</code></h3>
+<p>If you work with multiple branches or multiple copies of the repository, you should try <code>git worktrees</code>.</p>
+<p>To create a new branch that lives under a new working directory without disrupting your current working directory (useful for creating pull requests):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">git</span> worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory based-on-my-crufty-old-commit-ish</a></code></pre></div>
+<p>To simply check out a commit-ish under a new working directory without disrupting your current working directory (useful for reviewing pull requests):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">git</span> worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish</a></code></pre></div>
+<h3 id="interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base">Interactive "dummy rebases" for fixups and execs with <code>git merge-base</code></h3>
+<p>When rebasing, we often want to do a "dummy rebase," whereby we are not rebasing over an updated master but rather over the last common commit with master. This might be useful for rearranging commits, <code>rebase --autosquash</code>ing, or <code>rebase --exec</code>ing without introducing conflicts that arise from an updated master. In these situations, we can use <code>git merge-base</code> to identify the last common commit with master, and rebase off of that.</p>
+<p>To squash in <code>git commit --fixup</code> commits without rebasing over an updated master, we can do the following:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">git</span> rebase -i --autosquash <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<p>To execute <code>make check</code> on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">git</span> rebase -i --exec <span class="st">&quot;make check&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<hr />
+<p>This synergizes well with <a href="#cache-compilations-with-ccache"><code>ccache</code></a> as objects resulting from unchanged code will most likely hit the cache and won't need to be recompiled.</p>
+<p>You can also set up <a href="#reference-prs-easily-with-refspecs">upstream refspecs</a> to refer to pull requests easier in the above <code>git worktree</code> commands.</p>
+<h2 id="writing-code">Writing code</h2>
+<h3 id="format-ccprotobuf-diffs-with-clang-format-diffpy">Format C/C++/Protobuf diffs with <code>clang-format-diff.py</code></h3>
+<p>See <a href="/contrib/devtools/README.html#clang-format-diff.py">contrib/devtools/README.html</a>.</p>
+<h3 id="format-python-diffs-with-yapf-diffpy">Format Python diffs with <code>yapf-diff.py</code></h3>
+<p>Usage is exactly the same as <a href="#format-ccprotobuf-diffs-with-clang-format-diffpy"><code>clang-format-diff.py</code></a>. You can get it <a href="https://github.com/MarcoFalke/yapf-diff">here</a>.</p>
+<h2 id="rebasingmerging-code">Rebasing/Merging code</h2>
+<h3 id="more-conflict-context-with-mergeconflictstyle-diff3">More conflict context with <code>merge.conflictstyle diff3</code></h3>
+<p>For resolving merge/rebase conflicts, it can be useful to enable diff3 style using <code>git config merge.conflictstyle diff3</code>. Instead of</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb9-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
+<a class="sourceLine" id="cb9-2" title="2">yours</a>
+<a class="sourceLine" id="cb9-3" title="3">===</a>
+<a class="sourceLine" id="cb9-4" title="4">theirs</a>
+<a class="sourceLine" id="cb9-5" title="5"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<p>you will see</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb10-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
+<a class="sourceLine" id="cb10-2" title="2">yours</a>
+<a class="sourceLine" id="cb10-3" title="3">|||</a>
+<a class="sourceLine" id="cb10-4" title="4">original</a>
+<a class="sourceLine" id="cb10-5" title="5">===</a>
+<a class="sourceLine" id="cb10-6" title="6">theirs</a>
+<a class="sourceLine" id="cb10-7" title="7"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<p>This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between <em>original</em> and <em>theirs</em>, and mechanically apply that to <em>yours</em> (or the other way around).</p>
+<h2 id="reviewing-code">Reviewing code</h2>
+<h3 id="reduce-mental-load-with-git-diff-options">Reduce mental load with <code>git diff</code> options</h3>
+<p>When reviewing patches which change indentation in C++ files, use <code>git diff -w</code> and <code>git show -w</code>. This makes the diff algorithm ignore whitespace changes. This feature is also available on github.com, by adding <code>?w=1</code> at the end of any URL which shows a diff.</p>
+<p>When reviewing patches that change symbol names in many places, use <code>git diff --word-diff</code>. This will instead of showing the patch as deleted/added <em>lines</em>, show deleted/added <em>words</em>.</p>
+<p>When reviewing patches that move code around, try using <code>git diff --patience commit~:old/file.cpp commit:new/file/name.cpp</code>, and ignoring everything except the moved body of code which should show up as neither <code>+</code> or <code>-</code> lines. In case it was not a pure move, this may even work when combined with the <code>-w</code> or <code>--word-diff</code> options described above. <code>--color-moved=dimmed-zebra</code> will also dim the coloring of moved hunks in the diff on compatible terminals.</p>
+<h3 id="reference-prs-easily-with-refspecs">Reference PRs easily with <code>refspec</code>s</h3>
+<p>When looking at other's pull requests, it may make sense to add the following section to your <code>.git/config</code> file:</p>
+<pre><code>[remote &quot;upstream-pull&quot;]
+        fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+        url = git@github.com:bitcoin/bitcoin.git
+</code></pre>
+<p>This will add an <code>upstream-pull</code> remote to your git repository, which can be fetched using <code>git fetch --all</code> or <code>git fetch upstream-pull</code>. Afterwards, you can use <code>upstream-pull/NUMBER/head</code> in arguments to <code>git show</code>, <code>git checkout</code> and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.</p>
+<h3 id="diff-the-diffs-with-git-range-diff">Diff the diffs with <code>git range-diff</code></h3>
+<p>It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). <a href="https://git-scm.com/docs/git-range-diff">git range-diff</a> (Git &gt;= 2.19) can help solve this problem by diffing the diffs.</p>
+<p>For example, to identify the differences between your previously reviewed diffs P1-5, and the new diffs P1-2,N3-4 as illustrated below:</p>
+<pre><code>       P1--P2--P3--P4--P5   &lt;-- previously-reviewed-head
+      /
+...--m   &lt;-- master
+      \
+       P1--P2--N3--N4--N5   &lt;-- new-head (with P3 slightly modified)
+</code></pre>
+<p>You can do:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb13-1" title="1"><span class="fu">git</span> range-diff master previously-reviewed-head new-head</a></code></pre></div>
+<p>Note that <code>git range-diff</code> also work for rebases:</p>
+<pre><code>       P1--P2--P3--P4--P5   &lt;-- previously-reviewed-head
+      /
+...--m--m1--m2--m3   &lt;-- master
+                  \
+                   P1--P2--N3--N4  &lt;-- new-head (with P3 modified, P4 &amp; P5 squashed)
+
+PREV=P5 N=4 &amp;&amp; git range-diff `git merge-base --all HEAD $PREV`...$PREV HEAD~$N...HEAD
+</code></pre>
+<p>Where <code>P5</code> is the commit you last reviewed and <code>4</code> is the number of commits in the new version.</p>
+<hr />
+<p><code>git range-diff</code> also accepts normal <code>git diff</code> options, see <a href="#reduce-mental-load-with-git-diff-options">Reduce mental load with <code>git diff</code> options</a> for useful <code>git diff</code> options.</p>
+<p>You can also set up <a href="#reference-prs-easily-with-refspecs">upstream refspecs</a> to refer to pull requests easier in the above <code>git range-diff</code> commands.</p>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>rapidcheck</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="rapidcheck-property-based-testing-for-bitcoin-core">RapidCheck property-based testing for Bitcoin Core</h1>
+<h2 id="concept">Concept</h2>
+<p>Property-based testing is experimentally being added to Bitcoin Core with <a href="https://github.com/emil-e/rapidcheck">RapidCheck</a>, a C++ framework for property-based testing inspired by the Haskell library <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a>.</p>
+<p>RapidCheck performs random testing of program properties. A specification of the program is given in the form of properties which functions should satisfy, and RapidCheck tests that the properties hold in a large number of randomly generated cases.</p>
+<p>If an exception is found, RapidCheck tries to find the smallest case, for some definition of smallest, for which the property is still false and displays it as a counter-example. For example, if the input is an integer, RapidCheck tries to find the smallest integer for which the property is false.</p>
+<h2 id="running">Running</h2>
+<p>If RapidCheck is installed, Bitcoin Core will automatically run the property-based tests with the unit tests during <code>make check</code>, unless the <code>--without-rapidcheck</code> flag is passed when configuring.</p>
+<p>For more information, run <code>./configure --help</code> and see <code>--with-rapidcheck</code> under Optional Packages.</p>
+<h2 id="setup">Setup</h2>
+<p>The following instructions have been tested with Linux Debian and macOS.</p>
+<ol>
+<li><p>Clone the RapidCheck source code and cd into the repository.</p>
+<pre class="shell"><code>git clone https://github.com/emil-e/rapidcheck.git
+cd rapidcheck
+</code></pre></li>
+<li><p>Build RapidCheck (requires CMake to be installed).</p>
+<pre class="shell"><code>cmake -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -DRC_ENABLE_BOOST_TEST=ON $(pwd)
+make &amp;&amp; make install
+</code></pre></li>
+<li><p>Configure Bitcoin Core with RapidCheck.</p>
+<p><code>cd</code> to the directory of your local bitcoin repository and run <code>./configure</code>. In the output you should see:</p>
+<pre class="shell"><code>checking rapidcheck.h usability... yes
+checking rapidcheck.h presence... yes
+checking for rapidcheck.h... yes
+[...]
+Options used to compile and link:
+[...]
+  with test     = yes
+    with prop   = yes
+</code></pre></li>
+<li><p>Build Bitcoin Core with RapidCheck.</p>
+<p>Now you can run <code>make</code> and should see the property-based tests compiled with the unit tests:</p>
+<pre class="shell"><code>Making all in src
+[...]
+CXX      test/gen/test_bitcoin-crypto_gen.o
+CXX      test/test_bitcoin-key_properties.o
+</code></pre></li>
+<li><p>Run the unit tests with <code>make check</code>. The property-based tests will be run with the unit tests.</p>
+<pre class="shell"><code>Running tests: crypto_tests from test/crypto_tests.cpp
+[...]
+Running tests: key_properties from test/key_properties.cpp
+</code></pre></li>
+</ol>
+<p>That's it! You are now running property-based tests in Bitcoin Core.</p>
+</body>
+</html>
