@@ -17,7 +17,7 @@ for file in all.md $doc_filenames
 do
 	name=$(basename $file .md)
 	md2html $file docs/$name.html $name
-	echo "- [$name](/$name.html)" >> index.md
+	echo "- [$name]($name.html)" >> index.md
 done
 
 md2html index.md docs/index.html "Bitcoin Core Docs"
