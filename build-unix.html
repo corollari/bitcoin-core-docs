@@ -178,7 +178,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
 </code></pre>
 <p>Now, you can either build from self-compiled <a href="/depends/README.html">depends</a> or install the required dependencies:</p>
-<pre><code>sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
+<pre><code>sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
 </code></pre>
 <p>BerkeleyDB is required for the wallet.</p>
 <p>Ubuntu and Debian have their own <code>libdb-dev</code> and <code>libdb++-dev</code> packages, but these will install BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass <code>--with-incompatible-bdb</code> to configure.</p>

@@ -702,7 +702,7 @@ chmod 600 &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&
 <pre><code>sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
 </code></pre>
 <p>Now, you can either build from self-compiled <a href="/depends/README.html">depends</a> or install the required dependencies:</p>
-<pre><code>sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
+<pre><code>sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
 </code></pre>
 <p>BerkeleyDB is required for the wallet.</p>
 <p>Ubuntu and Debian have their own <code>libdb-dev</code> and <code>libdb++-dev</code> packages, but these will install BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which are based on BerkeleyDB 4.8. If you do not care about wallet compatibility, pass <code>--with-incompatible-bdb</code> to configure.</p>
@@ -1404,6 +1404,7 @@ make
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
       --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
 $ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+$ ./test/functional/test_runner.py --valgrind
 </code></pre>
 <h3 id="compiling-for-test-coverage">Compiling for test coverage</h3>
 <p>LCOV can be used to generate a test coverage report based upon <code>make check</code> execution. LCOV must be installed on your system (e.g. the <code>lcov</code> package on Debian/Ubuntu).</p>
@@ -1837,7 +1838,7 @@ nbproject/
 <li><p><em>Rationale</em>: RPC methods registered with the same function pointer will be considered aliases and only the first method name will show up in the <code>help</code> RPC command list.</p></li>
 <li><p><em>Exception</em>: Using RPC method aliases may be appropriate in cases where a new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly showing up in the command list.</p></li>
 </ul></li>
-<li><p>Use <em>invalid</em> bech32 addresses (e.g. the constant <code>EXAMPLE_ADDRESS</code>) for <code>RPCExamples</code> help documentation.</p>
+<li><p>Use <em>invalid</em> bech32 addresses (e.g. in the constant array <code>EXAMPLE_ADDRESS</code>) for <code>RPCExamples</code> help documentation.</p>
 <ul>
 <li><em>Rationale</em>: Prevent accidental transactions by users and encourage the use of bech32 addresses by default.</li>
 </ul></li>
@@ -2076,6 +2077,8 @@ nbproject/
 <li><p>Each user-defined wallet named "wallet_name" resides in <code>wallets/wallet_name/</code> subdirectory.</p></li>
 <li><p>The default (unnamed) wallet resides in <code>wallets/</code> subdirectory; if the latter does not exist, the wallet resides in the data directory.</p></li>
 <li><p>A wallet database path can be specified by <code>-wallet</code> option.</p></li>
+<li><p><code>wallet.dat</code> files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.</p></li>
+<li><p>Any copy or backup of the wallet should be done through a <code>backupwallet</code> call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.</p></li>
 </ol>
 <h2 id="gui-settings">GUI settings</h2>
 <p><code>bitcoin-qt</code> uses <a href="https://doc.qt.io/qt-5/qsettings.html"><code>QSettings</code></a> class; this implies platform-specific <a href="https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored">locations where application settings are stored</a>.</p>

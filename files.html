@@ -230,6 +230,8 @@
 <li><p>Each user-defined wallet named "wallet_name" resides in <code>wallets/wallet_name/</code> subdirectory.</p></li>
 <li><p>The default (unnamed) wallet resides in <code>wallets/</code> subdirectory; if the latter does not exist, the wallet resides in the data directory.</p></li>
 <li><p>A wallet database path can be specified by <code>-wallet</code> option.</p></li>
+<li><p><code>wallet.dat</code> files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.</p></li>
+<li><p>Any copy or backup of the wallet should be done through a <code>backupwallet</code> call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.</p></li>
 </ol>
 <h2 id="gui-settings">GUI settings</h2>
 <p><code>bitcoin-qt</code> uses <a href="https://doc.qt.io/qt-5/qsettings.html"><code>QSettings</code></a> class; this implies platform-specific <a href="https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored">locations where application settings are stored</a>.</p>

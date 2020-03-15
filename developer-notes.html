@@ -282,6 +282,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 $ valgrind --suppressions=contrib/valgrind.supp --leak-check=full \
       --show-leak-kinds=all src/test/test_bitcoin --log_level=test_suite
 $ valgrind -v --leak-check=full src/bitcoind -printtoconsole
+$ ./test/functional/test_runner.py --valgrind
 </code></pre>
 <h3 id="compiling-for-test-coverage">Compiling for test coverage</h3>
 <p>LCOV can be used to generate a test coverage report based upon <code>make check</code> execution. LCOV must be installed on your system (e.g. the <code>lcov</code> package on Debian/Ubuntu).</p>
@@ -715,7 +716,7 @@ nbproject/
 <li><p><em>Rationale</em>: RPC methods registered with the same function pointer will be considered aliases and only the first method name will show up in the <code>help</code> RPC command list.</p></li>
 <li><p><em>Exception</em>: Using RPC method aliases may be appropriate in cases where a new RPC is replacing a deprecated RPC, to avoid both RPCs confusingly showing up in the command list.</p></li>
 </ul></li>
-<li><p>Use <em>invalid</em> bech32 addresses (e.g. the constant <code>EXAMPLE_ADDRESS</code>) for <code>RPCExamples</code> help documentation.</p>
+<li><p>Use <em>invalid</em> bech32 addresses (e.g. in the constant array <code>EXAMPLE_ADDRESS</code>) for <code>RPCExamples</code> help documentation.</p>
 <ul>
 <li><em>Rationale</em>: Prevent accidental transactions by users and encourage the use of bech32 addresses by default.</li>
 </ul></li>
