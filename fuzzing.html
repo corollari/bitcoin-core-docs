@@ -44,12 +44,12 @@ export AFLPATH=$PWD
 <p>For macOS you may need to ignore x86 compilation checks when running <code>make</code>: <code>AFL_NO_X86=1 make</code>.</p>
 <h3 id="instrumentation">Instrumentation</h3>
 <p>To build Bitcoin Core using AFL instrumentation (this assumes that the <code>AFLPATH</code> was set as above):</p>
-<pre><code>./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
+<pre><code>./configure --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++
 export AFL_HARDEN=1
 make
 </code></pre>
 <p>If you are using clang you will need to substitute <code>afl-gcc</code> with <code>afl-clang</code> and <code>afl-g++</code> with <code>afl-clang++</code>, so the first line above becomes:</p>
-<pre><code>./configure --disable-ccache --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-clang CXX=${AFLPATH}/afl-clang++
+<pre><code>./configure --disable-shared --enable-tests --enable-fuzz CC=${AFLPATH}/afl-clang CXX=${AFLPATH}/afl-clang++
 </code></pre>
 <p>We disable ccache because we don't want to pollute the ccache with instrumented objects, and similarly don't want to use non-instrumented cached objects linked in.</p>
 <p>The fuzzing can be sped up significantly (~200x) by using <code>afl-clang-fast</code> and <code>afl-clang-fast++</code> in place of <code>afl-gcc</code> and <code>afl-g++</code> when compiling. When compiling using <code>afl-clang-fast</code>/<code>afl-clang-fast++</code> the resulting binary will be instrumented in such a way that the AFL features "persistent mode" and "deferred forkserver" can be used. See <a href="https://github.com/google/AFL/tree/master/llvm_mode">https://github.com/google/AFL/tree/master/llvm_mode</a> for details.</p>
@@ -68,7 +68,7 @@ AFL_NO_FORKSRV=1 $AFLPATH/afl-fuzz -i ${DIR_FUZZ_IN}/${FUZZ_TARGET} -o ${AFLOUT}
 <h2 id="libfuzzer">libFuzzer</h2>
 <p>A recent version of <code>clang</code>, the address/undefined sanitizers (ASan/UBSan) and libFuzzer is needed (all found in the <code>compiler-rt</code> runtime libraries package).</p>
 <p>To build all fuzz targets with libFuzzer, run</p>
-<pre><code>./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
+<pre><code>./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=clang CXX=clang++
 make
 </code></pre>
 <p>See <a href="https://llvm.org/docs/LibFuzzer.html#running">https://llvm.org/docs/LibFuzzer.html#running</a> on how to run the libFuzzer instrumented executable.</p>
@@ -80,7 +80,7 @@ make
 <p>Should you run into problems with the address sanitizer, it is possible you may need to run <code>./configure</code> with <code>--disable-asm</code> to avoid errors with certain assembly code from Bitcoin Core's code. See <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/developer-notes.html#sanitizers">developer notes on sanitizers</a> for more information.</p>
 <p>You may also need to take care of giving the correct path for clang and clang++, like <code>CC=/path/to/clang CXX=/path/to/clang++</code> if the non-systems clang does not come first in your path.</p>
 <p>Full configure that was tested on macOS Catalina with <code>brew</code> installed <code>llvm</code>:</p>
-<pre><code>./configure --disable-ccache --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
+<pre><code>./configure --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm
 </code></pre>
 </body>
 </html>
