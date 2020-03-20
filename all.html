@@ -404,35 +404,30 @@ rpcport=4000
 <p>This guide does not contain instructions for building the GUI.</p>
 <h2 id="preparation">Preparation</h2>
 <p>You will need the following dependencies, which can be installed as root via pkg:</p>
-<pre class="shell"><code>pkg install autoconf automake boost-libs git gmake libevent libtool pkgconf
-
-git clone https://github.com/bitcoin/bitcoin.git
-</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="ex">pkg</span> install autoconf automake boost-libs git gmake libevent libtool pkgconf</a>
+<a class="sourceLine" id="cb7-2" title="2"></a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
 <p>In order to run the test suite (recommended), you will need to have Python 3 installed:</p>
-<pre class="shell"><code>pkg install python3
-</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1"><span class="ex">pkg</span> install python3</a></code></pre></div>
 <p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
 <h3 id="building-berkeleydb">Building BerkeleyDB</h3>
 <p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
-<pre class="shell"><code>./contrib/install_db4.sh `pwd`
-export BDB_PREFIX=&quot;$PWD/db4&quot;
-</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1"><span class="ex">./contrib/install_db4.sh</span> <span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="bu">export</span> <span class="va">BDB_PREFIX=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/db4&quot;</span></a></code></pre></div>
 <h2 id="building-bitcoin-core">Building Bitcoin Core</h2>
-<p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error):</p>
+<p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error).</p>
 <p>With wallet:</p>
-<pre class="shell"><code>./autogen.sh
-./configure --with-gui=no \
-    BDB_LIBS=&quot;-L${BDB_PREFIX}/lib -ldb_cxx-4.8&quot; \
-    BDB_CFLAGS=&quot;-I${BDB_PREFIX}/include&quot;
-</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb10-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="ex">./configure</span> --with-gui=no \</a>
+<a class="sourceLine" id="cb10-3" title="3">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
+<a class="sourceLine" id="cb10-4" title="4">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
+<a class="sourceLine" id="cb10-5" title="5">    MAKE=gmake</a></code></pre></div>
 <p>Without wallet:</p>
-<pre class="shell"><code>./autogen.sh
-./configure --with-gui=no --disable-wallet
-</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb11-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="ex">./configure</span> --with-gui=no --disable-wallet MAKE=gmake</a></code></pre></div>
 <p>followed by:</p>
-<pre class="shell"><code>gmake # use -jX here for parallelism
-gmake check # Run tests if Python 3 is available
-</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb12-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="fu">gmake</span> check <span class="co"># Run tests if Python 3 is available</span></a></code></pre></div>
 <h1 id="netbsd-build-guide">NetBSD build guide</h1>
 <p>(updated for NetBSD 8.0)</p>
 <p>This guide describes how to build bitcoind and command-line utilities on NetBSD.</p>
@@ -455,30 +450,28 @@ git clone https://github.com/bitcoin/bitcoin.git
 <h3 id="building-berkeleydb-1">Building BerkeleyDB</h3>
 <p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
 <p>It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility). If you have to build it yourself, you can use <a href="/contrib/install_db4.sh">the installation script included in contrib/</a> like so:</p>
-<pre class="shell"><code>./contrib/install_db4.sh `pwd`
-</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb14-1" title="1"><span class="ex">./contrib/install_db4.sh</span> <span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span></a></code></pre></div>
 <p>from the root of the repository. Then set <code>BDB_PREFIX</code> for the next section:</p>
-<pre class="shell"><code>export BDB_PREFIX=&quot;$PWD/db4&quot;
-</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb15-1" title="1"><span class="bu">export</span> <span class="va">BDB_PREFIX=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/db4&quot;</span></a></code></pre></div>
 <h3 id="building-bitcoin-core-1">Building Bitcoin Core</h3>
 <p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error).</p>
 <p>With wallet:</p>
-<pre><code>./autogen.sh
-./configure --with-gui=no CPPFLAGS=&quot;-I/usr/pkg/include&quot; \
-    LDFLAGS=&quot;-L/usr/pkg/lib&quot; \
-    BOOST_CPPFLAGS=&quot;-I/usr/pkg/include&quot; \
-    BOOST_LDFLAGS=&quot;-L/usr/pkg/lib&quot; \
-    BDB_LIBS=&quot;-L${BDB_PREFIX}/lib -ldb_cxx-4.8&quot; \
-    BDB_CFLAGS=&quot;-I${BDB_PREFIX}/include&quot;
-</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb16-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="ex">./configure</span> --with-gui=no CPPFLAGS=<span class="st">&quot;-I/usr/pkg/include&quot;</span> \</a>
+<a class="sourceLine" id="cb16-3" title="3">    LDFLAGS=<span class="st">&quot;-L/usr/pkg/lib&quot;</span> \</a>
+<a class="sourceLine" id="cb16-4" title="4">    BOOST_CPPFLAGS=<span class="st">&quot;-I/usr/pkg/include&quot;</span> \</a>
+<a class="sourceLine" id="cb16-5" title="5">    BOOST_LDFLAGS=<span class="st">&quot;-L/usr/pkg/lib&quot;</span> \</a>
+<a class="sourceLine" id="cb16-6" title="6">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
+<a class="sourceLine" id="cb16-7" title="7">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
+<a class="sourceLine" id="cb16-8" title="8">    MAKE=gmake</a></code></pre></div>
 <p>Without wallet:</p>
-<pre><code>./autogen.sh
-./configure --with-gui=no --disable-wallet \
-    CPPFLAGS=&quot;-I/usr/pkg/include&quot; \
-    LDFLAGS=&quot;-L/usr/pkg/lib&quot; \
-    BOOST_CPPFLAGS=&quot;-I/usr/pkg/include&quot; \
-    BOOST_LDFLAGS=&quot;-L/usr/pkg/lib&quot;
-</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb17-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="ex">./configure</span> --with-gui=no --disable-wallet \</a>
+<a class="sourceLine" id="cb17-3" title="3">    CPPFLAGS=<span class="st">&quot;-I/usr/pkg/include&quot;</span> \</a>
+<a class="sourceLine" id="cb17-4" title="4">    LDFLAGS=<span class="st">&quot;-L/usr/pkg/lib&quot;</span> \</a>
+<a class="sourceLine" id="cb17-5" title="5">    BOOST_CPPFLAGS=<span class="st">&quot;-I/usr/pkg/include&quot;</span> \</a>
+<a class="sourceLine" id="cb17-6" title="6">    BOOST_LDFLAGS=<span class="st">&quot;-L/usr/pkg/lib&quot;</span> \</a>
+<a class="sourceLine" id="cb17-7" title="7">    MAKE=gmake</a></code></pre></div>
 <p>Build and run the tests:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb18-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
 <a class="sourceLine" id="cb18-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
@@ -499,13 +492,11 @@ git clone https://github.com/bitcoin/bitcoin.git
 <h3 id="building-berkeleydb-2">Building BerkeleyDB</h3>
 <p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
 <p>It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility). If you have to build it yourself, you can use <a href="/contrib/install_db4.sh">the installation script included in contrib/</a> like so:</p>
-<pre class="shell"><code>./contrib/install_db4.sh `pwd` CC=cc CXX=c++
-</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb20-1" title="1"><span class="ex">./contrib/install_db4.sh</span> <span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span> CC=cc CXX=c++</a></code></pre></div>
 <p>from the root of the repository. Then set <code>BDB_PREFIX</code> for the next section:</p>
-<pre class="shell"><code>export BDB_PREFIX=&quot;$PWD/db4&quot;
-</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb21-1" title="1"><span class="bu">export</span> <span class="va">BDB_PREFIX=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/db4&quot;</span></a></code></pre></div>
 <h3 id="building-bitcoin-core-2">Building Bitcoin Core</h3>
-<p><strong>Important</strong>: use <code>gmake</code>, not <code>make</code>. The non-GNU <code>make</code> will exit with a horrible error.</p>
+<p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error).</p>
 <p>Preparation:</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1"></a>
 <a class="sourceLine" id="cb22-2" title="2"><span class="co"># Replace this with the autoconf version that you installed. Include only</span></a>
@@ -520,9 +511,11 @@ git clone https://github.com/bitcoin/bitcoin.git
 <p>Make sure <code>BDB_PREFIX</code> is set to the appropriate path from the above steps.</p>
 <p>To configure with wallet:</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb23-1" title="1"><span class="ex">./configure</span> --with-gui=no CC=cc CXX=c++ \</a>
-<a class="sourceLine" id="cb23-2" title="2">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span></a></code></pre></div>
+<a class="sourceLine" id="cb23-2" title="2">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
+<a class="sourceLine" id="cb23-3" title="3">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
+<a class="sourceLine" id="cb23-4" title="4">    MAKE=gmake</a></code></pre></div>
 <p>To configure without wallet:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CXX=c++</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CXX=c++ MAKE=gmake</a></code></pre></div>
 <p>Build and run the tests:</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
 <a class="sourceLine" id="cb25-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>

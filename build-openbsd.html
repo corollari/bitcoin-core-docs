@@ -98,13 +98,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="building-berkeleydb">Building BerkeleyDB</h3>
 <p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
 <p>It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility). If you have to build it yourself, you can use <a href="/contrib/install_db4.sh">the installation script included in contrib/</a> like so:</p>
-<pre class="shell"><code>./contrib/install_db4.sh `pwd` CC=cc CXX=c++
-</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">./contrib/install_db4.sh</span> <span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span> CC=cc CXX=c++</a></code></pre></div>
 <p>from the root of the repository. Then set <code>BDB_PREFIX</code> for the next section:</p>
-<pre class="shell"><code>export BDB_PREFIX=&quot;$PWD/db4&quot;
-</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="bu">export</span> <span class="va">BDB_PREFIX=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/db4&quot;</span></a></code></pre></div>
 <h3 id="building-bitcoin-core">Building Bitcoin Core</h3>
-<p><strong>Important</strong>: use <code>gmake</code>, not <code>make</code>. The non-GNU <code>make</code> will exit with a horrible error.</p>
+<p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error).</p>
 <p>Preparation:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"></a>
 <a class="sourceLine" id="cb4-2" title="2"><span class="co"># Replace this with the autoconf version that you installed. Include only</span></a>
@@ -119,9 +117,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Make sure <code>BDB_PREFIX</code> is set to the appropriate path from the above steps.</p>
 <p>To configure with wallet:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="ex">./configure</span> --with-gui=no CC=cc CXX=c++ \</a>
-<a class="sourceLine" id="cb5-2" title="2">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span></a></code></pre></div>
+<a class="sourceLine" id="cb5-2" title="2">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
+<a class="sourceLine" id="cb5-3" title="3">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
+<a class="sourceLine" id="cb5-4" title="4">    MAKE=gmake</a></code></pre></div>
 <p>To configure without wallet:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CXX=c++</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CXX=c++ MAKE=gmake</a></code></pre></div>
 <p>Build and run the tests:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
 <a class="sourceLine" id="cb7-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
