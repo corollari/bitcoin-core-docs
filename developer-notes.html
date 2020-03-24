@@ -138,6 +138,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li><a href="#release-notes">Release notes</a></li>
 <li><a href="#rpc-interface-guidelines">RPC interface guidelines</a></li>
+<li><a href="#internal-interface-guidelines">Internal interface guidelines</a></li>
 </ul></li>
 </ul>
 <!-- markdown-toc end -->
@@ -724,6 +725,62 @@ nbproject/
 <ul>
 <li><em>Rationale</em>: User-facing consistency.</li>
 </ul></li>
+</ul>
+<h2 id="internal-interface-guidelines">Internal interface guidelines</h2>
+<p>Internal interfaces between parts of the codebase that are meant to be independent (node, wallet, GUI), are defined in <a href="../src/interfaces/"><code>src/interfaces/</code></a>. The main interface classes defined there are <a href="../src/interfaces/chain.h"><code>interfaces::Chain</code></a>, used by wallet to access the node's latest chain state, <a href="../src/interfaces/node.h"><code>interfaces::Node</code></a>, used by the GUI to control the node, and <a href="../src/interfaces/wallet.h"><code>interfaces::Wallet</code></a>, used by the GUI to control an individual wallet. There are also more specialized interface types like <a href="../src/interfaces/handler.h"><code>interfaces::Handler</code></a> <a href="../src/interfaces/chain.h"><code>interfaces::ChainClient</code></a> passed to and from various interface methods.</p>
+<p>Interface classes are written in a particular style so node, wallet, and GUI code doesn't need to run in the same process, and so the class declarations work more easily with tools and libraries supporting interprocess communication:</p>
+<ul>
+<li><p>Interface classes should be abstract and have methods that are <a href="https://en.cppreference.com/w/cpp/language/abstract_class">pure virtual</a>. This allows multiple implementations to inherit from the same interface class, particularly so one implementation can execute functionality in the local process, and other implementations can forward calls to remote processes.</p></li>
+<li><p>Interface method definitions should wrap existing functionality instead of implementing new functionality. Any substantial new node or wallet functionality should be implemented in <a href="../src/node/"><code>src/node/</code></a> or <a href="../src/wallet/"><code>src/wallet/</code></a> and just exposed in <a href="../src/interfaces/"><code>src/interfaces/</code></a> instead of being implemented there, so it can be more modular and accessible to unit tests.</p></li>
+<li><p>Interface method parameter and return types should either be serializable or be other interface classes. Interface methods shouldn't pass references to objects that can't be serialized or accessed from another process.</p>
+<p>Examples:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb28-1" title="1"><span class="co">// Good: takes string argument and returns interface class pointer</span></a>
+<a class="sourceLine" id="cb28-2" title="2"><span class="kw">virtual</span> unique_ptr&lt;interfaces::Wallet&gt; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb28-3" title="3"></a>
+<a class="sourceLine" id="cb28-4" title="4"><span class="co">// Bad: returns CWallet reference that can&#39;t be used from another process</span></a>
+<a class="sourceLine" id="cb28-5" title="5"><span class="kw">virtual</span> CWallet&amp; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb29-1" title="1"><span class="co">// Good: accepts and returns primitive types</span></a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> findBlock(<span class="at">const</span> uint256&amp; hash, <span class="dt">int</span>&amp; out_height, <span class="dt">int64_t</span>&amp; out_time) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb29-3" title="3"></a>
+<a class="sourceLine" id="cb29-4" title="4"><span class="co">// Bad: returns pointer to internal node in a linked list inaccessible to</span></a>
+<a class="sourceLine" id="cb29-5" title="5"><span class="co">// other processes</span></a>
+<a class="sourceLine" id="cb29-6" title="6"><span class="kw">virtual</span> <span class="at">const</span> CBlockIndex* findBlock(<span class="at">const</span> uint256&amp; hash) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb30-1" title="1"><span class="co">// Good: takes plain callback type and returns interface pointer</span></a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb30-3" title="3"><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr&lt;interfaces::Handler&gt; handleTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb30-4" title="4"></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="co">// Bad: returns boost connection specific to local process</span></a>
+<a class="sourceLine" id="cb30-6" title="6"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb30-7" title="7"><span class="kw">virtual</span> <span class="ex">boost::</span>signals2<span class="ex">::</span>scoped_connection connectTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a></code></pre></div></li>
+<li><p>For consistency and friendliness to code generation tools, interface method input and inout parameters should be ordered first and output parameters should come last.</p>
+<p>Example:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb31-1" title="1"><span class="co">// Good: error output param is last</span></a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, CAmount max_fee, <span class="bu">std::</span>string&amp; error) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb31-3" title="3"></a>
+<a class="sourceLine" id="cb31-4" title="4"><span class="co">// Bad: error output param is between input params</span></a>
+<a class="sourceLine" id="cb31-5" title="5"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, <span class="bu">std::</span>string&amp; error, CAmount max_fee) = <span class="dv">0</span>;</a></code></pre></div></li>
+<li><p>For friendliness to code generation tools, interface methods should not be overloaded:</p>
+<p>Example:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb32-1" title="1"><span class="co">// Good: method names are unique</span></a>
+<a class="sourceLine" id="cb32-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectByAddress(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb32-3" title="3"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectById(NodeId id) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb32-4" title="4"></a>
+<a class="sourceLine" id="cb32-5" title="5"><span class="co">// Bad: methods are overloaded by type</span></a>
+<a class="sourceLine" id="cb32-6" title="6"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb32-7" title="7"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(NodeId id) = <span class="dv">0</span>;</a></code></pre></div></li>
+<li><p>For consistency and friendliness to code generation tools, interface method names should be <code>lowerCamelCase</code> and standalone function names should be <code>UpperCamelCase</code>.</p>
+<p>Examples:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb33-1" title="1"><span class="co">// Good: lowerCamelCase method name</span></a>
+<a class="sourceLine" id="cb33-2" title="2"><span class="kw">virtual</span> <span class="dt">void</span> blockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb33-3" title="3"></a>
+<a class="sourceLine" id="cb33-4" title="4"><span class="co">// Bad: uppercase class method</span></a>
+<a class="sourceLine" id="cb33-5" title="5"><span class="kw">virtual</span> <span class="dt">void</span> BlockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb34-1" title="1"><span class="co">// Good: UpperCamelCase standalone function name</span></a>
+<a class="sourceLine" id="cb34-2" title="2"><span class="bu">std::</span>unique_ptr&lt;Node&gt; MakeNode(LocalInit&amp; init);</a>
+<a class="sourceLine" id="cb34-3" title="3"></a>
+<a class="sourceLine" id="cb34-4" title="4"><span class="co">// Bad: lowercase standalone function</span></a>
+<a class="sourceLine" id="cb34-5" title="5"><span class="bu">std::</span>unique_ptr&lt;Node&gt; makeNode(LocalInit&amp; init);</a></code></pre></div>
+<p>Note: This last convention isn't generally followed outside of <a href="../src/interfaces/"><code>src/interfaces/</code></a>, though it did come up for discussion before in <a href="https://github.com/bitcoin/bitcoin/pull/14635">#14635</a>.</p></li>
 </ul>
 </body>
 </html>
