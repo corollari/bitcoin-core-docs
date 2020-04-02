@@ -19,9 +19,8 @@ jobs:
     - name: Build page
       run: bash build.sh
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v2.5.0
+      uses: peaceiris/actions-gh-pages@v3
       if: success() && github.ref == 'refs/heads/master'
-      env: 
-        PUBLISH_DIR: ./docs
-        PUBLISH_BRANCH: gh-pages
-        ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+      with: 
+        publish_dir: ./docs
+        deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
