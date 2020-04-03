@@ -107,7 +107,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h2 id="number-of-peers">Number of peers</h2>
 <ul>
-<li><code>-maxconnections=&lt;n&gt;</code> - the maximum number of connections, this defaults to <code>125</code>. Each active connection takes up some memory. Only significant if incoming connections are enabled, otherwise the number of connections will never be more than <code>10</code>. Of the 10 outbound peers, there can be 8 full outgoing connections and 2 -blocksonly peers, in which case they are block/addr peers, but not tx peers.</li>
+<li><code>-maxconnections=&lt;n&gt;</code> - the maximum number of connections, this defaults to 125. Each active connection takes up some memory. This option applies only if incoming connections are enabled, otherwise the number of connections will never be more than 10. Of the 10 outbound peers, there can be 8 full-relay connections and 2 block-relay-only ones.</li>
 </ul>
 <h2 id="thread-configuration">Thread configuration</h2>
 <p>For each thread a thread stack needs to be allocated. By default on Linux, threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a 32-bit system.</p>
