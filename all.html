@@ -123,7 +123,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="need-help">Need Help?</h3>
 <ul>
 <li>See the documentation at the <a href="https://en.bitcoin.it/wiki/Main_Page">Bitcoin Wiki</a> for help and more information.</li>
-<li>Ask for help on <a href="http://webchat.freenode.net?channels=bitcoin">#bitcoin</a> on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net?channels=bitcoin">webchat here</a>.</li>
+<li>Ask for help on <a href="https://webchat.freenode.net/#bitcoin">#bitcoin</a> on Freenode. If you don't have an IRC client, use <a href="https://webchat.freenode.net/#bitcoin">webchat here</a>.</li>
 <li>Ask for help on the <a href="https://bitcointalk.org/">BitcoinTalk</a> forums, in the <a href="https://bitcointalk.org/index.php?board=4.0">Technical Support board</a>.</li>
 </ul>
 <h2 id="building">Building</h2>
@@ -158,8 +158,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="resources">Resources</h3>
 <ul>
 <li>Discuss on the <a href="https://bitcointalk.org/">BitcoinTalk</a> forums, in the <a href="https://bitcointalk.org/index.php?board=6.0">Development &amp; Technical Discussion board</a>.</li>
-<li>Discuss project-specific development on #bitcoin-core-dev on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net/?channels=bitcoin-core-dev">webchat here</a>.</li>
-<li>Discuss general Bitcoin development on #bitcoin-dev on Freenode. If you don't have an IRC client, use <a href="http://webchat.freenode.net/?channels=bitcoin-dev">webchat here</a>.</li>
+<li>Discuss project-specific development on #bitcoin-core-dev on Freenode. If you don't have an IRC client, use <a href="https://webchat.freenode.net/#bitcoin-core-dev">webchat here</a>.</li>
+<li>Discuss general Bitcoin development on #bitcoin-dev on Freenode. If you don't have an IRC client, use <a href="https://webchat.freenode.net/#bitcoin-dev">webchat here</a>.</li>
 </ul>
 <h3 id="miscellaneous">Miscellaneous</h3>
 <ul>
@@ -2415,10 +2415,10 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <h3 id="reference-prs-easily-with-refspecs">Reference PRs easily with <code>refspec</code>s</h3>
 <p>When looking at other's pull requests, it may make sense to add the following section to your <code>.git/config</code> file:</p>
 <pre><code>[remote &quot;upstream-pull&quot;]
-        fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+        fetch = +refs/pull/*/head:refs/remotes/upstream-pull/*
         url = git@github.com:bitcoin/bitcoin.git
 </code></pre>
-<p>This will add an <code>upstream-pull</code> remote to your git repository, which can be fetched using <code>git fetch --all</code> or <code>git fetch upstream-pull</code>. Afterwards, you can use <code>upstream-pull/NUMBER/head</code> in arguments to <code>git show</code>, <code>git checkout</code> and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.</p>
+<p>This will add an <code>upstream-pull</code> remote to your git repository, which can be fetched using <code>git fetch --all</code> or <code>git fetch upstream-pull</code>. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use <code>upstream-pull/NUMBER/head</code> in arguments to <code>git show</code>, <code>git checkout</code> and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.</p>
 <h3 id="diff-the-diffs-with-git-range-diff">Diff the diffs with <code>git range-diff</code></h3>
 <p>It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). <a href="https://git-scm.com/docs/git-range-diff">git range-diff</a> (Git &gt;= 2.19) can help solve this problem by diffing the diffs.</p>
 <p>For example, to identify the differences between your previously reviewed diffs P1-5, and the new diffs P1-2,N3-4 as illustrated below:</p>
@@ -2787,7 +2787,7 @@ checkout the appropriate branch for this release series
 rm -rf *
 tar xf signature-osx.tar.gz
 tar xf signature-win.tar.gz
-git add -a
+git add -A
 git commit -m &quot;point to ${VERSION}&quot;
 git tag -s v${VERSION} HEAD
 git push the current branch and new tag

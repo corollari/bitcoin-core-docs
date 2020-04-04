@@ -185,10 +185,10 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <h3 id="reference-prs-easily-with-refspecs">Reference PRs easily with <code>refspec</code>s</h3>
 <p>When looking at other's pull requests, it may make sense to add the following section to your <code>.git/config</code> file:</p>
 <pre><code>[remote &quot;upstream-pull&quot;]
-        fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+        fetch = +refs/pull/*/head:refs/remotes/upstream-pull/*
         url = git@github.com:bitcoin/bitcoin.git
 </code></pre>
-<p>This will add an <code>upstream-pull</code> remote to your git repository, which can be fetched using <code>git fetch --all</code> or <code>git fetch upstream-pull</code>. Afterwards, you can use <code>upstream-pull/NUMBER/head</code> in arguments to <code>git show</code>, <code>git checkout</code> and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.</p>
+<p>This will add an <code>upstream-pull</code> remote to your git repository, which can be fetched using <code>git fetch --all</code> or <code>git fetch upstream-pull</code>. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use <code>upstream-pull/NUMBER/head</code> in arguments to <code>git show</code>, <code>git checkout</code> and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.</p>
 <h3 id="diff-the-diffs-with-git-range-diff">Diff the diffs with <code>git range-diff</code></h3>
 <p>It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). <a href="https://git-scm.com/docs/git-range-diff">git range-diff</a> (Git &gt;= 2.19) can help solve this problem by diffing the diffs.</p>
 <p>For example, to identify the differences between your previously reviewed diffs P1-5, and the new diffs P1-2,N3-4 as illustrated below:</p>
