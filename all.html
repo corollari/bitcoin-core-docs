@@ -2494,50 +2494,6 @@ PREV=P5 N=4 &amp;&amp; git range-diff `git merge-base --all HEAD $PREV`...$PREV 
 <li>Finally anyone can broadcast the transaction using <code>sendrawtransaction "T"</code>.</li>
 </ul>
 <p>In case there are more signers, it may be advantageous to let them all sign in parallel, rather than passing the PSBT from one signer to the next one. In the above example this would translate to Carol handing a copy of <em>P</em> to each signer separately. They can then all invoke <code>walletprocesspsbt "P"</code>, and end up with their individually-signed PSBT structures. They then all send those back to Carol (or anyone) who can combine them using <code>combinepsbt</code>. The last two steps (<code>finalizepsbt</code> and <code>sendrawtransaction</code>) remain unchanged.</p>
-<h1 id="rapidcheck-property-based-testing-for-bitcoin-core">RapidCheck property-based testing for Bitcoin Core</h1>
-<h2 id="concept">Concept</h2>
-<p>Property-based testing is experimentally being added to Bitcoin Core with <a href="https://github.com/emil-e/rapidcheck">RapidCheck</a>, a C++ framework for property-based testing inspired by the Haskell library <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a>.</p>
-<p>RapidCheck performs random testing of program properties. A specification of the program is given in the form of properties which functions should satisfy, and RapidCheck tests that the properties hold in a large number of randomly generated cases.</p>
-<p>If an exception is found, RapidCheck tries to find the smallest case, for some definition of smallest, for which the property is still false and displays it as a counter-example. For example, if the input is an integer, RapidCheck tries to find the smallest integer for which the property is false.</p>
-<h2 id="running-3">Running</h2>
-<p>If RapidCheck is installed, Bitcoin Core will automatically run the property-based tests with the unit tests during <code>make check</code>, unless the <code>--without-rapidcheck</code> flag is passed when configuring.</p>
-<p>For more information, run <code>./configure --help</code> and see <code>--with-rapidcheck</code> under Optional Packages.</p>
-<h2 id="setup-1">Setup</h2>
-<p>The following instructions have been tested with Linux Debian and macOS.</p>
-<ol>
-<li><p>Clone the RapidCheck source code and cd into the repository.</p>
-<pre class="shell"><code>git clone https://github.com/emil-e/rapidcheck.git
-cd rapidcheck
-</code></pre></li>
-<li><p>Build RapidCheck (requires CMake to be installed).</p>
-<pre class="shell"><code>cmake -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -DRC_ENABLE_BOOST_TEST=ON $(pwd)
-make &amp;&amp; make install
-</code></pre></li>
-<li><p>Configure Bitcoin Core with RapidCheck.</p>
-<p><code>cd</code> to the directory of your local bitcoin repository and run <code>./configure</code>. In the output you should see:</p>
-<pre class="shell"><code>checking rapidcheck.h usability... yes
-checking rapidcheck.h presence... yes
-checking for rapidcheck.h... yes
-[...]
-Options used to compile and link:
-[...]
-  with test     = yes
-    with prop   = yes
-</code></pre></li>
-<li><p>Build Bitcoin Core with RapidCheck.</p>
-<p>Now you can run <code>make</code> and should see the property-based tests compiled with the unit tests:</p>
-<pre class="shell"><code>Making all in src
-[...]
-CXX      test/gen/test_bitcoin-crypto_gen.o
-CXX      test/test_bitcoin-key_properties.o
-</code></pre></li>
-<li><p>Run the unit tests with <code>make check</code>. The property-based tests will be run with the unit tests.</p>
-<pre class="shell"><code>Running tests: crypto_tests from test/crypto_tests.cpp
-[...]
-Running tests: key_properties from test/key_properties.cpp
-</code></pre></li>
-</ol>
-<p>That's it! You are now running property-based tests in Bitcoin Core.</p>
 <h1 id="reduce-memory">Reduce Memory</h1>
 <p>There are a few parameters that can be dialed down to reduce the memory usage of <code>bitcoind</code>. This can be useful on embedded systems or small VPSes.</p>
 <h2 id="in-memory-caches">In-memory caches</h2>
@@ -2574,9 +2530,9 @@ Running tests: key_properties from test/key_properties.cpp
 </ul>
 <h2 id="linux-specific">Linux specific</h2>
 <p>By default, since glibc <code>2.10</code>, the C library will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets <code>MALLOC_ARENA_MAX</code> before starting bitcoind:</p>
-<div class="sourceCode" id="cb134"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb134-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb134-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
-<a class="sourceLine" id="cb134-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
+<div class="sourceCode" id="cb129"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb129-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb129-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
+<a class="sourceLine" id="cb129-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
 <h1 id="the-behavior-was-introduced-to-increase-cpu-locality-of-allocated-memory-and-performance-with-concurrent-allocation-so-this-setting-could-in-theory-reduce-performance-however-in-bitcoin-core-very-little-parallel-allocation-happens-so-the-impact-is-expected-to-be-small-or-absent-reduce-traffic">The behavior was introduced to increase CPU locality of allocated memory and performance with concurrent allocation, so this setting could in theory reduce performance. However, in Bitcoin Core very little parallel allocation happens, so the impact is expected to be small or absent. Reduce Traffic</h1>
 <p>Some node operators need to deal with bandwidth caps imposed by their ISPs.</p>
 <p>By default, Bitcoin Core allows up to 125 connections to different peers, 10 of which are outbound. You can therefore, have at most 115 inbound connections. Of the 10 outbound peers, there can be 8 full-relay connections and 2 block-relay-only ones.</p>
@@ -2825,7 +2781,7 @@ popd
 <ul>
 <li>Create <code>SHA256SUMS.asc</code> for the builds, and GPG-sign it:</li>
 </ul>
-<div class="sourceCode" id="cb154"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb154-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
+<div class="sourceCode" id="cb149"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb149-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
 <p>The list of files should be:</p>
 <pre><code>bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
 bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
@@ -2849,7 +2805,7 @@ rm SHA256SUMS
 <li><p>Upload zips and installers, as well as <code>SHA256SUMS.asc</code> from last step, to the bitcoin.org server into <code>/var/www/bin/bitcoin-core-${VERSION}</code></p></li>
 <li><p>A <code>.torrent</code> will appear in the directory after a few minutes. Optionally help seed this torrent. To get the <code>magnet:</code> URI use:</p></li>
 </ul>
-<div class="sourceCode" id="cb157"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb157-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb152"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb152-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
 <p>Insert the magnet URI into the announcement sent to mailing lists. This permits people without access to <code>bitcoin.org</code> to download the binary distribution. Also put it into the <code>optional_magnetlink:</code> slot in the YAML file for bitcoin.org (see below for bitcoin.org update instructions).</p>
 <ul>
 <li><p>Update bitcoin.org version</p>
@@ -3050,11 +3006,11 @@ HiddenServicePort 18333 127.0.0.1:18333
 <p>We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in <code>src/qt/locale/</code>. The translation source files must adhere to the following format: <code>bitcoin_xx_YY.ts or bitcoin_xx.ts</code></p>
 <p><code>src/qt/locale/bitcoin_en.ts</code> is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of <code>gettext</code>, so make sure that utility is installed (ie, <code>apt-get install gettext</code> on Ubuntu/Debian). Once this has been updated, <code>lupdate</code> (included in the Qt SDK) is used to update <code>bitcoin_en.ts</code>.</p>
 <p>To automatically regenerate the <code>bitcoin_en.ts</code> file, run the following commands:</p>
-<div class="sourceCode" id="cb166"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb166-1" title="1"><span class="bu">cd</span> src/</a>
-<a class="sourceLine" id="cb166-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
+<div class="sourceCode" id="cb161"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb161-1" title="1"><span class="bu">cd</span> src/</a>
+<a class="sourceLine" id="cb161-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
 <p><code>contrib/bitcoin-qt.pro</code> takes care of generating <code>.qm</code> (binary compiled) files from <code>.ts</code> (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.</p>
 <p><strong>Example Qt translation</strong></p>
-<div class="sourceCode" id="cb167"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb167-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
+<div class="sourceCode" id="cb162"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb162-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
 <h3 id="creating-a-pull-request">Creating a pull-request</h3>
 <p>For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.</p>
 <p>When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.</p>
@@ -3069,13 +3025,13 @@ git commit
 <p>The client is used to fetch updated translations. If you are having problems, or need more details, see <a href="https://docs.transifex.com/client/installing-the-client">https://docs.transifex.com/client/installing-the-client</a></p>
 <p><code>pip install transifex-client</code></p>
 <p>Setup your Transifex client config as follows. Please <em>ignore the token field</em>.</p>
-<div class="sourceCode" id="cb169"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb169-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
-<a class="sourceLine" id="cb169-2" title="2"></a>
-<a class="sourceLine" id="cb169-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
-<a class="sourceLine" id="cb169-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
-<a class="sourceLine" id="cb169-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
-<a class="sourceLine" id="cb169-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
-<a class="sourceLine" id="cb169-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
+<div class="sourceCode" id="cb164"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb164-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
+<a class="sourceLine" id="cb164-2" title="2"></a>
+<a class="sourceLine" id="cb164-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
+<a class="sourceLine" id="cb164-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
+<a class="sourceLine" id="cb164-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
+<a class="sourceLine" id="cb164-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
+<a class="sourceLine" id="cb164-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
 <p>The Transifex Bitcoin project config file is included as part of the repo. It can be found at <code>.tx/config</code>, however you shouldn’t need to change anything.</p>
 <h3 id="synchronising-translations">Synchronising translations</h3>
 <p>To assist in updating translations, a helper script is available in the <a href="https://github.com/bitcoin-core/bitcoin-maintainer-tools">maintainer-tools repo</a>.</p>
@@ -3084,11 +3040,11 @@ git commit
 <li><code>git add</code> new translations from <code>src/qt/locale/</code></li>
 <li>Update <code>src/qt/bitcoin_locale.qrc</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb170"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb170-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb165"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb165-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
 <ol start="4">
 <li>Update <code>src/Makefile.qt_locale.include</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb171"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb171-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb166"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb166-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
 <p><strong>Do not directly download translations</strong> one by one from the Transifex website, as we do a few post-processing steps before committing the translations.</p>
 <h3 id="handling-plurals-in-source-files">Handling Plurals (in source files)</h3>
 <p>When new plurals are added to the source file, it's important to do the following steps:</p>
@@ -3103,10 +3059,10 @@ git commit
 </ol>
 <h3 id="translating-a-new-language">Translating a new language</h3>
 <p>To create a new language template, you will need to edit the languages manifest file <code>src/qt/bitcoin_locale.qrc</code> and add a new entry. Below is an example of the English language entry.</p>
-<div class="sourceCode" id="cb172"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb172-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb172-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
-<a class="sourceLine" id="cb172-3" title="3">    ...</a>
-<a class="sourceLine" id="cb172-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb167-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb167-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
+<a class="sourceLine" id="cb167-3" title="3">    ...</a>
+<a class="sourceLine" id="cb167-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
 <p><strong>Note:</strong> that the language translation file <strong>must end in <code>.qm</code></strong> (the compiled extension), and not <code>.ts</code>.</p>
 <h3 id="questions-and-general-assistance">Questions and general assistance</h3>
 <p>The Bitcoin-Core translation maintainers include <em>tcatm, seone, Diapolo, wumpus and luke-jr</em>. You can find them, and others, in the Freenode IRC chatroom - <code>irc.freenode.net #bitcoin-core-dev</code>.</p>
