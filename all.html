@@ -1763,7 +1763,7 @@ nbproject/
 <p>Some good examples of scripted-diff:</p>
 <ul>
 <li><p><a href="https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d">scripted-diff: Rename InitInterfaces to NodeContext</a> uses an elegant script to replace occurrences of multiple terms in all source files.</p></li>
-<li><p><a href="https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d">scripted-diff: Remove g_connman, g_banman globals</a> replaces specific terms in a list of specific source files.</p></li>
+<li><p><a href="https://github.com/bitcoin/bitcoin/commit/8922d7f6b751a3e6b3b9f6fb7961c442877fb65a">scripted-diff: Remove g_connman, g_banman globals</a> replaces specific terms in a list of specific source files.</p></li>
 <li><p><a href="https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9">scripted-diff: Replace fprintf with tfm::format</a> does a global replacement but excludes certain directories.</p></li>
 </ul>
 <p>To find all previous uses of scripted diffs in the repository, do:</p>
@@ -2311,7 +2311,34 @@ contrib/init/bitcoind.init:       CentOS compatible SysV style init script
 <p>This Launch Agent will cause bitcoind to start whenever the user logs in.</p>
 <p>NOTE: This approach is intended for those wanting to run bitcoind as the current user. You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a Launch Daemon with a dedicated bitcoin user.</p>
 <h2 id="auto-respawn">Auto-respawn</h2>
-<h1 id="auto-respawning-is-currently-only-configured-for-upstart-and-systhtml-reasonable-defaults-have-been-chosen-but-ymmv-productivity-notes">Auto respawning is currently only configured for Upstart and syst.html. Reasonable defaults have been chosen but YMMV. Productivity Notes</h1>
+<p>Auto respawning is currently only configured for Upstart and syst.html. Reasonable defaults have been chosen but YMMV.</p>
+<h1 id="multiprocess-bitcoin">Multiprocess Bitcoin</h1>
+<p>On unix systems, the <code>--enable-multiprocess</code> build option can be passed to <code>./configure</code> to build new <code>bitcoin-node</code>, <code>bitcoin-wallet</code>, and <code>bitcoin-gui</code> executables alongside existing <code>bitcoind</code> and <code>bitcoin-qt</code> executables.</p>
+<p><code>bitcoin-node</code> is a drop-in replacement for <code>bitcoind</code>, and <code>bitcoin-gui</code> is a drop-in replacement for <code>bitcoin-qt</code>, and there are no differences in use or external behavior between the new and old executables. But internally (after <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a>), <code>bitcoin-gui</code> will spawn a <code>bitcoin-node</code> process to run P2P and RPC code, communicating with it across a socket pair, and <code>bitcoin-node</code> will spawn <code>bitcoin-wallet</code> to run wallet code, also communicating over a socket pair. This will let node, wallet, and GUI code run in separate address spaces for better isolation, and allow future improvements like being able to start and stop components independently on different machines and environments.</p>
+<h2 id="next-steps">Next steps</h2>
+<p>Specific next steps after <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a> will be:</p>
+<ul>
+<li><input type="checkbox" disabled="" />
+Adding <code>-ipcbind</code> and <code>-ipcconnect</code> options to <code>bitcoin-node</code>, <code>bitcoin-wallet</code>, and <code>bitcoin-gui</code> executables so they can listen and connect to TCP ports and unix socket paths. This will allow separate processes to be started and stopped any time and connect to each other.</li>
+<li><input type="checkbox" disabled="" />
+Adding <code>-server</code> and <code>-rpcbind</code> options to the <code>bitcoin-wallet</code> executable so wallet processes can handle RPC requests directly without going through the node.</li>
+<li><input type="checkbox" disabled="" />
+Supporting windows, not just unix systems. The existing socket code is already cross-platform, so the only windows-specific code that needs to be written is code spawning a process and passing a socket descriptor. This can be implemented with <code>CreateProcess</code> and <code>WSADuplicateSocket</code>. Example: <a href="https://memset.wordpress.com/2010/10/13/win32-api-passing-socket-with-ipc-method/">https://memset.wordpress.com/2010/10/13/win32-api-passing-socket-with-ipc-method/</a>.</li>
+<li><input type="checkbox" disabled="" />
+Adding sandbox features, restricting subprocess access to resources and data. See <a href="https://eklitzke.org/multiprocess-bitcoin">https://eklitzke.org/multiprocess-bitcoin</a>.</li>
+</ul>
+<h2 id="debugging">Debugging</h2>
+<p>After <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a>, the <code>-debug=ipc</code> command line option can be used to see requests and responses between processes.</p>
+<h2 id="installation-1">Installation</h2>
+<p>The multiprocess feature requires <a href="https://capnproto.org/">Cap'n Proto</a> and <a href="https://github.com/chaincodelabs/libmultiprocess">libmultiprocess</a> as dependencies. A simple way to get starting using it without installing these dependencies manually is to use the <a href="../depends">depends system</a> with the <code>MULTIPROCESS=1</code> <a href="../depends#dependency-options">dependency option</a> passed to make:</p>
+<pre><code>cd &lt;BITCOIN_SOURCE_DIRECTORY&gt;
+make -C depends NO_QT=1 MULTIPROCESS=1
+./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu
+make
+src/bitcoin-node -regtest -printtoconsole -debug=ipc
+</code></pre>
+<p>The configure script will pick up settings and library locations from the depends directory, so there is no need to pass <code>--enable-multiprocess</code> as a separate flag when using the depends system (it's controlled by the <code>MULTIPROCESS=1</code> option).</p>
+<h1 id="alternately-you-can-install-capn-proto-and-libmultiprocess-packages-on-your-system-and-just-run-configure---enable-multiprocess-without-using-the-depends-system-the-configure-script-will-be-able-to-locate-the-installed-packages-via-pkg-config-see-installation-section-of-the-libmultiprocess-readme-for-install-steps-see-build-unixhtml-and-build-osxhtml-for-information-about-installing-dependencies-in-general-productivity-notes">Alternately, you can install <a href="https://capnproto.org/">Cap'n Proto</a> and <a href="https://github.com/chaincodelabs/libmultiprocess">libmultiprocess</a> packages on your system, and just run <code>./configure --enable-multiprocess</code> without using the depends system. The configure script will be able to locate the installed packages via <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>. See <a href="https://github.com/chaincodelabs/libmultiprocess#installation">Installation</a> section of the libmultiprocess readme for install steps. See <a href="build-unix.html">build-unix.html</a> and <a href="build-osx.html">build-osx.html</a> for information about installing dependencies in general. Productivity Notes</h1>
 <h2 id="table-of-contents">Table of Contents</h2>
 <ul>
 <li><a href="#general">General</a>
@@ -2355,33 +2382,33 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <p>You <em>must not</em> set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).</p>
 <h3 id="disable-features-with-configure">Disable features with <code>./configure</code></h3>
 <p>After running <code>./autogen.sh</code>, which generates the <code>./configure</code> file, use <code>./configure --help</code> to identify features that you can disable to save on compilation time. A few common flags:</p>
-<div class="sourceCode" id="cb116"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb116-1" title="1"><span class="ex">--without-miniupnpc</span></a>
-<a class="sourceLine" id="cb116-2" title="2"><span class="ex">--disable-bench</span></a>
-<a class="sourceLine" id="cb116-3" title="3"><span class="ex">--disable-wallet</span></a>
-<a class="sourceLine" id="cb116-4" title="4"><span class="ex">--without-gui</span></a></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb117-1" title="1"><span class="ex">--without-miniupnpc</span></a>
+<a class="sourceLine" id="cb117-2" title="2"><span class="ex">--disable-bench</span></a>
+<a class="sourceLine" id="cb117-3" title="3"><span class="ex">--disable-wallet</span></a>
+<a class="sourceLine" id="cb117-4" title="4"><span class="ex">--without-gui</span></a></code></pre></div>
 <p>If you do need the wallet enabled, it is common for devs to add <code>--with-incompatible-bdb</code>. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.</p>
 <h3 id="make-use-of-your-threads-with-make--j">Make use of your threads with <code>make -j</code></h3>
 <p>If you have multiple threads on your machine, you can tell <code>make</code> to utilize all of them with:</p>
-<div class="sourceCode" id="cb117"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb117-1" title="1"><span class="fu">make</span> -j<span class="st">&quot;</span><span class="va">$(($(</span><span class="ex">nproc</span><span class="va">)</span>+1<span class="va">))</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb118"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb118-1" title="1"><span class="fu">make</span> -j<span class="st">&quot;</span><span class="va">$(($(</span><span class="ex">nproc</span><span class="va">)</span>+1<span class="va">))</span><span class="st">&quot;</span></a></code></pre></div>
 <h3 id="only-build-what-you-need">Only build what you need</h3>
 <p>When rebuilding during development, note that running <code>make</code>, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).</p>
 <p>Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:</p>
-<div class="sourceCode" id="cb118"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb118-1" title="1"><span class="fu">make</span> src/bitcoind src/bitcoin-cli</a>
-<a class="sourceLine" id="cb118-2" title="2"><span class="fu">make</span> src/qt/bitcoin-qt</a>
-<a class="sourceLine" id="cb118-3" title="3"><span class="fu">make</span> -C src bitcoin_bench</a></code></pre></div>
+<div class="sourceCode" id="cb119"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb119-1" title="1"><span class="fu">make</span> src/bitcoind src/bitcoin-cli</a>
+<a class="sourceLine" id="cb119-2" title="2"><span class="fu">make</span> src/qt/bitcoin-qt</a>
+<a class="sourceLine" id="cb119-3" title="3"><span class="fu">make</span> -C src bitcoin_bench</a></code></pre></div>
 <p>(You can and should combine this with <code>-j</code>, as above, for a parallel build.)</p>
 <h3 id="multiple-working-directories-with-git-worktrees">Multiple working directories with <code>git worktrees</code></h3>
 <p>If you work with multiple branches or multiple copies of the repository, you should try <code>git worktrees</code>.</p>
 <p>To create a new branch that lives under a new working directory without disrupting your current working directory (useful for creating pull requests):</p>
-<div class="sourceCode" id="cb119"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb119-1" title="1"><span class="fu">git</span> worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory based-on-my-crufty-old-commit-ish</a></code></pre></div>
+<div class="sourceCode" id="cb120"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb120-1" title="1"><span class="fu">git</span> worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory based-on-my-crufty-old-commit-ish</a></code></pre></div>
 <p>To simply check out a commit-ish under a new working directory without disrupting your current working directory (useful for reviewing pull requests):</p>
-<div class="sourceCode" id="cb120"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb120-1" title="1"><span class="fu">git</span> worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish</a></code></pre></div>
+<div class="sourceCode" id="cb121"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb121-1" title="1"><span class="fu">git</span> worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish</a></code></pre></div>
 <h3 id="interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base">Interactive "dummy rebases" for fixups and execs with <code>git merge-base</code></h3>
 <p>When rebasing, we often want to do a "dummy rebase," whereby we are not rebasing over an updated master but rather over the last common commit with master. This might be useful for rearranging commits, <code>rebase --autosquash</code>ing, or <code>rebase --exec</code>ing without introducing conflicts that arise from an updated master. In these situations, we can use <code>git merge-base</code> to identify the last common commit with master, and rebase off of that.</p>
 <p>To squash in <code>git commit --fixup</code> commits without rebasing over an updated master, we can do the following:</p>
-<div class="sourceCode" id="cb121"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb121-1" title="1"><span class="fu">git</span> rebase -i --autosquash <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb122"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb122-1" title="1"><span class="fu">git</span> rebase -i --autosquash <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
 <p>To execute <code>make check</code> on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:</p>
-<div class="sourceCode" id="cb122"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb122-1" title="1"><span class="fu">git</span> rebase -i --exec <span class="st">&quot;make check&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb123"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb123-1" title="1"><span class="fu">git</span> rebase -i --exec <span class="st">&quot;make check&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
 <hr />
 <p>This synergizes well with <a href="#cache-compilations-with-ccache"><code>ccache</code></a> as objects resulting from unchanged code will most likely hit the cache and won't need to be recompiled.</p>
 <p>You can also set up <a href="#reference-prs-easily-with-refspecs">upstream refspecs</a> to refer to pull requests easier in the above <code>git worktree</code> commands.</p>
@@ -2393,19 +2420,19 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <h2 id="rebasingmerging-code">Rebasing/Merging code</h2>
 <h3 id="more-conflict-context-with-mergeconflictstyle-diff3">More conflict context with <code>merge.conflictstyle diff3</code></h3>
 <p>For resolving merge/rebase conflicts, it can be useful to enable diff3 style using <code>git config merge.conflictstyle diff3</code>. Instead of</p>
-<div class="sourceCode" id="cb123"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb123-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
-<a class="sourceLine" id="cb123-2" title="2">yours</a>
-<a class="sourceLine" id="cb123-3" title="3">===</a>
-<a class="sourceLine" id="cb123-4" title="4">theirs</a>
-<a class="sourceLine" id="cb123-5" title="5"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
-<p>you will see</p>
 <div class="sourceCode" id="cb124"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb124-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
 <a class="sourceLine" id="cb124-2" title="2">yours</a>
-<a class="sourceLine" id="cb124-3" title="3">|||</a>
-<a class="sourceLine" id="cb124-4" title="4">original</a>
-<a class="sourceLine" id="cb124-5" title="5">===</a>
-<a class="sourceLine" id="cb124-6" title="6">theirs</a>
-<a class="sourceLine" id="cb124-7" title="7"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<a class="sourceLine" id="cb124-3" title="3">===</a>
+<a class="sourceLine" id="cb124-4" title="4">theirs</a>
+<a class="sourceLine" id="cb124-5" title="5"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<p>you will see</p>
+<div class="sourceCode" id="cb125"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb125-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
+<a class="sourceLine" id="cb125-2" title="2">yours</a>
+<a class="sourceLine" id="cb125-3" title="3">|||</a>
+<a class="sourceLine" id="cb125-4" title="4">original</a>
+<a class="sourceLine" id="cb125-5" title="5">===</a>
+<a class="sourceLine" id="cb125-6" title="6">theirs</a>
+<a class="sourceLine" id="cb125-7" title="7"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
 <p>This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between <em>original</em> and <em>theirs</em>, and mechanically apply that to <em>yours</em> (or the other way around).</p>
 <h2 id="reviewing-code">Reviewing code</h2>
 <h3 id="reduce-mental-load-with-git-diff-options">Reduce mental load with <code>git diff</code> options</h3>
@@ -2429,7 +2456,7 @@ base_dir = /home/yourname  # or wherever you keep your source files
        P1--P2--N3--N4--N5   &lt;-- new-head (with P3 slightly modified)
 </code></pre>
 <p>You can do:</p>
-<div class="sourceCode" id="cb127"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb127-1" title="1"><span class="fu">git</span> range-diff master previously-reviewed-head new-head</a></code></pre></div>
+<div class="sourceCode" id="cb128"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb128-1" title="1"><span class="fu">git</span> range-diff master previously-reviewed-head new-head</a></code></pre></div>
 <p>Note that <code>git range-diff</code> also work for rebases:</p>
 <pre><code>       P1--P2--P3--P4--P5   &lt;-- previously-reviewed-head
       /
@@ -2530,9 +2557,9 @@ PREV=P5 N=4 &amp;&amp; git range-diff `git merge-base --all HEAD $PREV`...$PREV 
 </ul>
 <h2 id="linux-specific">Linux specific</h2>
 <p>By default, since glibc <code>2.10</code>, the C library will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets <code>MALLOC_ARENA_MAX</code> before starting bitcoind:</p>
-<div class="sourceCode" id="cb129"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb129-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb129-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
-<a class="sourceLine" id="cb129-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
+<div class="sourceCode" id="cb130"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb130-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb130-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
+<a class="sourceLine" id="cb130-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
 <h1 id="the-behavior-was-introduced-to-increase-cpu-locality-of-allocated-memory-and-performance-with-concurrent-allocation-so-this-setting-could-in-theory-reduce-performance-however-in-bitcoin-core-very-little-parallel-allocation-happens-so-the-impact-is-expected-to-be-small-or-absent-reduce-traffic">The behavior was introduced to increase CPU locality of allocated memory and performance with concurrent allocation, so this setting could in theory reduce performance. However, in Bitcoin Core very little parallel allocation happens, so the impact is expected to be small or absent. Reduce Traffic</h1>
 <p>Some node operators need to deal with bandwidth caps imposed by their ISPs.</p>
 <p>By default, Bitcoin Core allows up to 125 connections to different peers, 10 of which are outbound. You can therefore, have at most 115 inbound connections. Of the 10 outbound peers, there can be 8 full-relay connections and 2 block-relay-only ones.</p>
@@ -2709,7 +2736,7 @@ popd
 ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 popd
 </code></pre>
-<h3 id="next-steps">Next steps:</h3>
+<h3 id="next-steps-1">Next steps:</h3>
 <p>Commit your signature to gitian.sigs:</p>
 <pre><code>pushd gitian.sigs
 git add ${VERSION}-linux/&quot;${SIGNER}&quot;
@@ -2781,7 +2808,7 @@ popd
 <ul>
 <li>Create <code>SHA256SUMS.asc</code> for the builds, and GPG-sign it:</li>
 </ul>
-<div class="sourceCode" id="cb149"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb149-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb150-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
 <p>The list of files should be:</p>
 <pre><code>bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
 bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
@@ -2805,7 +2832,7 @@ rm SHA256SUMS
 <li><p>Upload zips and installers, as well as <code>SHA256SUMS.asc</code> from last step, to the bitcoin.org server into <code>/var/www/bin/bitcoin-core-${VERSION}</code></p></li>
 <li><p>A <code>.torrent</code> will appear in the directory after a few minutes. Optionally help seed this torrent. To get the <code>magnet:</code> URI use:</p></li>
 </ul>
-<div class="sourceCode" id="cb152"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb152-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb153"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb153-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
 <p>Insert the magnet URI into the announcement sent to mailing lists. This permits people without access to <code>bitcoin.org</code> to download the binary distribution. Also put it into the <code>optional_magnetlink:</code> slot in the YAML file for bitcoin.org (see below for bitcoin.org update instructions).</p>
 <ul>
 <li><p>Update bitcoin.org version</p>
@@ -3006,11 +3033,11 @@ HiddenServicePort 18333 127.0.0.1:18333
 <p>We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in <code>src/qt/locale/</code>. The translation source files must adhere to the following format: <code>bitcoin_xx_YY.ts or bitcoin_xx.ts</code></p>
 <p><code>src/qt/locale/bitcoin_en.ts</code> is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of <code>gettext</code>, so make sure that utility is installed (ie, <code>apt-get install gettext</code> on Ubuntu/Debian). Once this has been updated, <code>lupdate</code> (included in the Qt SDK) is used to update <code>bitcoin_en.ts</code>.</p>
 <p>To automatically regenerate the <code>bitcoin_en.ts</code> file, run the following commands:</p>
-<div class="sourceCode" id="cb161"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb161-1" title="1"><span class="bu">cd</span> src/</a>
-<a class="sourceLine" id="cb161-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
+<div class="sourceCode" id="cb162"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb162-1" title="1"><span class="bu">cd</span> src/</a>
+<a class="sourceLine" id="cb162-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
 <p><code>contrib/bitcoin-qt.pro</code> takes care of generating <code>.qm</code> (binary compiled) files from <code>.ts</code> (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.</p>
 <p><strong>Example Qt translation</strong></p>
-<div class="sourceCode" id="cb162"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb162-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
+<div class="sourceCode" id="cb163"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb163-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
 <h3 id="creating-a-pull-request">Creating a pull-request</h3>
 <p>For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.</p>
 <p>When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.</p>
@@ -3025,13 +3052,13 @@ git commit
 <p>The client is used to fetch updated translations. If you are having problems, or need more details, see <a href="https://docs.transifex.com/client/installing-the-client">https://docs.transifex.com/client/installing-the-client</a></p>
 <p><code>pip install transifex-client</code></p>
 <p>Setup your Transifex client config as follows. Please <em>ignore the token field</em>.</p>
-<div class="sourceCode" id="cb164"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb164-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
-<a class="sourceLine" id="cb164-2" title="2"></a>
-<a class="sourceLine" id="cb164-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
-<a class="sourceLine" id="cb164-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
-<a class="sourceLine" id="cb164-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
-<a class="sourceLine" id="cb164-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
-<a class="sourceLine" id="cb164-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
+<div class="sourceCode" id="cb165"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb165-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
+<a class="sourceLine" id="cb165-2" title="2"></a>
+<a class="sourceLine" id="cb165-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
+<a class="sourceLine" id="cb165-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
+<a class="sourceLine" id="cb165-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
+<a class="sourceLine" id="cb165-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
+<a class="sourceLine" id="cb165-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
 <p>The Transifex Bitcoin project config file is included as part of the repo. It can be found at <code>.tx/config</code>, however you shouldn’t need to change anything.</p>
 <h3 id="synchronising-translations">Synchronising translations</h3>
 <p>To assist in updating translations, a helper script is available in the <a href="https://github.com/bitcoin-core/bitcoin-maintainer-tools">maintainer-tools repo</a>.</p>
@@ -3040,11 +3067,11 @@ git commit
 <li><code>git add</code> new translations from <code>src/qt/locale/</code></li>
 <li>Update <code>src/qt/bitcoin_locale.qrc</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb165"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb165-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb166"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb166-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
 <ol start="4">
 <li>Update <code>src/Makefile.qt_locale.include</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb166"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb166-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb167-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
 <p><strong>Do not directly download translations</strong> one by one from the Transifex website, as we do a few post-processing steps before committing the translations.</p>
 <h3 id="handling-plurals-in-source-files">Handling Plurals (in source files)</h3>
 <p>When new plurals are added to the source file, it's important to do the following steps:</p>
@@ -3059,10 +3086,10 @@ git commit
 </ol>
 <h3 id="translating-a-new-language">Translating a new language</h3>
 <p>To create a new language template, you will need to edit the languages manifest file <code>src/qt/bitcoin_locale.qrc</code> and add a new entry. Below is an example of the English language entry.</p>
-<div class="sourceCode" id="cb167"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb167-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb167-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
-<a class="sourceLine" id="cb167-3" title="3">    ...</a>
-<a class="sourceLine" id="cb167-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb168"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb168-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb168-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
+<a class="sourceLine" id="cb168-3" title="3">    ...</a>
+<a class="sourceLine" id="cb168-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
 <p><strong>Note:</strong> that the language translation file <strong>must end in <code>.qm</code></strong> (the compiled extension), and not <code>.ts</code>.</p>
 <h3 id="questions-and-general-assistance">Questions and general assistance</h3>
 <p>The Bitcoin-Core translation maintainers include <em>tcatm, seone, Diapolo, wumpus and luke-jr</em>. You can find them, and others, in the Freenode IRC chatroom - <code>irc.freenode.net #bitcoin-core-dev</code>.</p>

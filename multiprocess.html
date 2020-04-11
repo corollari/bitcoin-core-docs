@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>multiprocess</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="pandoc.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+  <link rel='shortcut icon' href='favicon.png' />
+</head>
+<body>
+<h1 id="multiprocess-bitcoin">Multiprocess Bitcoin</h1>
+<p>On unix systems, the <code>--enable-multiprocess</code> build option can be passed to <code>./configure</code> to build new <code>bitcoin-node</code>, <code>bitcoin-wallet</code>, and <code>bitcoin-gui</code> executables alongside existing <code>bitcoind</code> and <code>bitcoin-qt</code> executables.</p>
+<p><code>bitcoin-node</code> is a drop-in replacement for <code>bitcoind</code>, and <code>bitcoin-gui</code> is a drop-in replacement for <code>bitcoin-qt</code>, and there are no differences in use or external behavior between the new and old executables. But internally (after <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a>), <code>bitcoin-gui</code> will spawn a <code>bitcoin-node</code> process to run P2P and RPC code, communicating with it across a socket pair, and <code>bitcoin-node</code> will spawn <code>bitcoin-wallet</code> to run wallet code, also communicating over a socket pair. This will let node, wallet, and GUI code run in separate address spaces for better isolation, and allow future improvements like being able to start and stop components independently on different machines and environments.</p>
+<h2 id="next-steps">Next steps</h2>
+<p>Specific next steps after <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a> will be:</p>
+<ul>
+<li><input type="checkbox" disabled="" />
+Adding <code>-ipcbind</code> and <code>-ipcconnect</code> options to <code>bitcoin-node</code>, <code>bitcoin-wallet</code>, and <code>bitcoin-gui</code> executables so they can listen and connect to TCP ports and unix socket paths. This will allow separate processes to be started and stopped any time and connect to each other.</li>
+<li><input type="checkbox" disabled="" />
+Adding <code>-server</code> and <code>-rpcbind</code> options to the <code>bitcoin-wallet</code> executable so wallet processes can handle RPC requests directly without going through the node.</li>
+<li><input type="checkbox" disabled="" />
+Supporting windows, not just unix systems. The existing socket code is already cross-platform, so the only windows-specific code that needs to be written is code spawning a process and passing a socket descriptor. This can be implemented with <code>CreateProcess</code> and <code>WSADuplicateSocket</code>. Example: <a href="https://memset.wordpress.com/2010/10/13/win32-api-passing-socket-with-ipc-method/">https://memset.wordpress.com/2010/10/13/win32-api-passing-socket-with-ipc-method/</a>.</li>
+<li><input type="checkbox" disabled="" />
+Adding sandbox features, restricting subprocess access to resources and data. See <a href="https://eklitzke.org/multiprocess-bitcoin">https://eklitzke.org/multiprocess-bitcoin</a>.</li>
+</ul>
+<h2 id="debugging">Debugging</h2>
+<p>After <a href="https://github.com/bitcoin/bitcoin/pull/10102">#10102</a>, the <code>-debug=ipc</code> command line option can be used to see requests and responses between processes.</p>
+<h2 id="installation">Installation</h2>
+<p>The multiprocess feature requires <a href="https://capnproto.org/">Cap'n Proto</a> and <a href="https://github.com/chaincodelabs/libmultiprocess">libmultiprocess</a> as dependencies. A simple way to get starting using it without installing these dependencies manually is to use the <a href="../depends">depends system</a> with the <code>MULTIPROCESS=1</code> <a href="../depends#dependency-options">dependency option</a> passed to make:</p>
+<pre><code>cd &lt;BITCOIN_SOURCE_DIRECTORY&gt;
+make -C depends NO_QT=1 MULTIPROCESS=1
+./configure --prefix=$PWD/depends/x86_64-pc-linux-gnu
+make
+src/bitcoin-node -regtest -printtoconsole -debug=ipc
+</code></pre>
+<p>The configure script will pick up settings and library locations from the depends directory, so there is no need to pass <code>--enable-multiprocess</code> as a separate flag when using the depends system (it's controlled by the <code>MULTIPROCESS=1</code> option).</p>
+<p>Alternately, you can install <a href="https://capnproto.org/">Cap'n Proto</a> and <a href="https://github.com/chaincodelabs/libmultiprocess">libmultiprocess</a> packages on your system, and just run <code>./configure --enable-multiprocess</code> without using the depends system. The configure script will be able to locate the installed packages via <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a>. See <a href="https://github.com/chaincodelabs/libmultiprocess#installation">Installation</a> section of the libmultiprocess readme for install steps. See <a href="build-unix.html">build-unix.html</a> and <a href="build-osx.html">build-osx.html</a> for information about installing dependencies in general.</p>
+</body>
+</html>
