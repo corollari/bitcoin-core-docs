@@ -337,17 +337,23 @@ make cov
 <p>Re-architecting the core code so there are better-defined interfaces between the various components is a goal, with any necessary locking done by the components (e.g. see the self-contained <code>FillableSigningProvider</code> class and its <code>cs_KeyStore</code> lock for example).</p>
 <h2 id="threads">Threads</h2>
 <ul>
-<li><p>ThreadScriptCheck : Verifies block scripts.</p></li>
-<li><p>ThreadImport : Loads blocks from <code>blk*.dat</code> files or <code>-loadblock=&lt;file&gt;</code>.</p></li>
-<li><p>ThreadDNSAddressSeed : Loads addresses of peers from the DNS.</p></li>
-<li><p>ThreadMapPort : Universal plug-and-play startup/shutdown.</p></li>
-<li><p>ThreadSocketHandler : Sends/Receives data from peers on port 8333.</p></li>
-<li><p>ThreadOpenAddedConnections : Opens network connections to added nodes.</p></li>
-<li><p>ThreadOpenConnections : Initiates new connections to peers.</p></li>
-<li><p>ThreadMessageHandler : Higher-level message handling (sending and receiving).</p></li>
-<li><p>DumpAddresses : Dumps IP addresses of nodes to <code>peers.dat</code>.</p></li>
-<li><p>ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.</p></li>
-<li><p>Shutdown : Does an orderly shutdown of everything.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/bitcoind_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97">Main thread (<code>bitcoind</code>)</a> : Started from <code>main()</code> in <code>bitcoind.cpp</code>. Responsible for starting up and shutting down the application.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/init_8cpp.html#ae9e290a0e829ec0198518de2eda579d1">ThreadImport (<code>b-loadblk</code>)</a> : Loads blocks from <code>blk*.dat</code> files or <code>-loadblock=&lt;file&gt;</code> on startup.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/validation_8cpp.html#a925a33e7952a157922b0bbb8dab29a20">ThreadScriptCheck (<code>b-scriptch.x</code>)</a> : Parallel script validation threads for transactions in blocks.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/httpserver_8cpp.html#abb9f6ea8819672bd9a62d3695070709c">ThreadHTTP (<code>b-http</code>)</a> : Libevent thread to listen for RPC and REST connections.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/httpserver_8cpp.html#aa6a7bc27265043bc0193220c5ae3a55f">HTTP worker threads(<code>b-httpworker.x</code>)</a> : Threads to service RPC and REST requests.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_base_index.html#a96a7407421fbf877509248bbe64f8d87">Indexer threads (<code>b-txindex</code>, etc)</a> : One thread per indexer.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_scheduler.html#a14d2800815da93577858ea078aed1fba">SchedulerThread (<code>b-scheduler</code>)</a> : Does asynchronous background tasks like dumping wallet contents, dumping addrman and running asynchronous validationinterface callbacks.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a4faed3692d57a0d7bdbecf3b37f72de0">TorControlThread (<code>b-torcontrol</code>)</a> : Libevent thread for tor connections.</p></li>
+<li><p>Net threads:</p>
+<ul>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_connman.html#aacdbb7148575a31bb33bc345e2bf22a9">ThreadMessageHandler (<code>b-msghand</code>)</a> : Application level message handling (sending and receiving). Almost all net_processing and validation logic runs on this thread.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_connman.html#aa7c6970ed98a4a7bafbc071d24897d13">ThreadDNSAddressSeed (<code>b-dnsseed</code>)</a> : Loads addresses of peers from the DNS.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/net_8cpp.html#a63f82a71c4169290c2db1651a9bbe249">ThreadMapPort (<code>b-upnp</code>)</a> : Universal plug-and-play startup/shutdown.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_connman.html#a765597cbfe99c083d8fa3d61bb464e34">ThreadSocketHandler (<code>b-net</code>)</a> : Sends/Receives data from peers on port 8333.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_connman.html#a0b787caf95e52a346a2b31a580d60a62">ThreadOpenAddedConnections (<code>b-addcon</code>)</a> : Opens network connections to added nodes.</p></li>
+<li><p><a href="https://doxygen.bitcoincore.org/class_c_connman.html#a55e9feafc3bab78e5c9d408c207faa45">ThreadOpenConnections (<code>b-opencon</code>)</a> : Initiates new connections to peers.</p></li>
+</ul></li>
 </ul>
 <h2 id="ignoring-ideeditor-files">Ignoring IDE/editor files</h2>
 <p>In closed-source environments in which everyone uses the same IDE, it is common to add temporary files it produces to the project-wide <code>.gitignore</code> file.</p>
