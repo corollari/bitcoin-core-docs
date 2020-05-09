@@ -3102,7 +3102,7 @@ git commit
 <li>GUI strings, anything that appears in a dialog or window</li>
 </ul>
 <h3 id="gui-strings">GUI strings</h3>
-<p>Anything that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles. This includes messages passed to the GUI through the UI interface through <code>InitMessage</code>, <code>ThreadSafeMessageBox</code> or <code>ShowProgress</code>.</p>
+<p>Do not translate technical or extremely rare errors. Anything else that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles. This includes messages passed to the GUI through the UI interface through <code>InitMessage</code>, <code>ThreadSafeMessageBox</code> or <code>ShowProgress</code>.</p>
 <h2 id="general-recommendations">General recommendations</h2>
 <h3 id="avoid-unnecessary-translation-strings">Avoid unnecessary translation strings</h3>
 <p>Try not to burden translators with translating messages that are e.g. slight variations of other messages. In the GUI, avoid the use of text where an icon or symbol will do. Make sure that placeholder texts in forms do not end up in the list of strings to be translated (use <code>&lt;string notr="true"&gt;</code>).</p>
