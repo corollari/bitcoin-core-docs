@@ -54,7 +54,6 @@
 <li>pruned : (boolean) if the blocks are subject to pruning</li>
 <li>pruneheight : (numeric) highest block available</li>
 <li>softforks : (array) status of softforks in progress</li>
-<li>bip9_softforks : (object) status of BIP9 softforks in progress</li>
 </ul>
 <h4 id="query-utxo-set">Query UTXO set</h4>
 <p><code>GET /rest/getutxos/&lt;checkmempool&gt;/&lt;txid&gt;-&lt;n&gt;/&lt;txid&gt;-&lt;n&gt;/.../&lt;txid&gt;-&lt;n&gt;.&lt;bin|hex|json&gt;</code></p>
@@ -67,7 +66,6 @@
    &quot;bitmap&quot;: &quot;1&quot;,
    &quot;utxos&quot; : [
       {
-         &quot;txvers&quot; : 1
          &quot;height&quot; : 2147483647,
          &quot;value&quot; : 8.8687,
          &quot;scriptPubKey&quot; : {

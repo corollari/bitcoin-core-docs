@@ -443,29 +443,39 @@ nbproject/
 <ul>
 <li><em>Rationale</em>: Easier to understand what is happening, thus easier to spot mistakes, even for those that are not language lawyers.</li>
 </ul></li>
+<li><p>Use <code>Span</code> as function argument when it can operate on any range-like container.</p>
+<ul>
+<li><em>Rationale</em>: Compared to <code>Foo(const vector&lt;int&gt;&amp;)</code> this avoids the need for a (potentially expensive) conversion to vector if the caller happens to have the input stored in another type of container. However, be aware of the pitfalls documented in <a href="../src/span.h">span.h</a>.</li>
+</ul></li>
+</ul>
+<div class="sourceCode" id="cb18"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb18-1" title="1"><span class="dt">void</span> Foo(Span&lt;<span class="at">const</span> <span class="dt">int</span>&gt; data);</a>
+<a class="sourceLine" id="cb18-2" title="2"></a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="bu">std::</span>vector&lt;<span class="dt">int</span>&gt; vec{<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>};</a>
+<a class="sourceLine" id="cb18-4" title="4">Foo(vec);</a></code></pre></div>
+<ul>
 <li><p>Prefer <code>enum class</code> (scoped enumerations) over <code>enum</code> (traditional enumerations) where possible.</p>
 <ul>
 <li><em>Rationale</em>: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to <code>int</code>, and name clashes due to enumerators being exported to the surrounding scope.</li>
 </ul></li>
 <li><p><code>switch</code> statement on an enumeration example:</p></li>
 </ul>
-<div class="sourceCode" id="cb18"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">enum</span> <span class="kw">class</span> Tabs {</a>
-<a class="sourceLine" id="cb18-2" title="2">    INFO,</a>
-<a class="sourceLine" id="cb18-3" title="3">    CONSOLE,</a>
-<a class="sourceLine" id="cb18-4" title="4">    GRAPH,</a>
-<a class="sourceLine" id="cb18-5" title="5">    PEERS</a>
-<a class="sourceLine" id="cb18-6" title="6">};</a>
-<a class="sourceLine" id="cb18-7" title="7"></a>
-<a class="sourceLine" id="cb18-8" title="8"><span class="dt">int</span> GetInt(Tabs tab)</a>
-<a class="sourceLine" id="cb18-9" title="9">{</a>
-<a class="sourceLine" id="cb18-10" title="10">    <span class="cf">switch</span> (tab) {</a>
-<a class="sourceLine" id="cb18-11" title="11">    <span class="cf">case</span> Tabs::INFO: <span class="cf">return</span> <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb18-12" title="12">    <span class="cf">case</span> Tabs::CONSOLE: <span class="cf">return</span> <span class="dv">1</span>;</a>
-<a class="sourceLine" id="cb18-13" title="13">    <span class="cf">case</span> Tabs::GRAPH: <span class="cf">return</span> <span class="dv">2</span>;</a>
-<a class="sourceLine" id="cb18-14" title="14">    <span class="cf">case</span> Tabs::PEERS: <span class="cf">return</span> <span class="dv">3</span>;</a>
-<a class="sourceLine" id="cb18-15" title="15">    } <span class="co">// no default case, so the compiler can warn about missing cases</span></a>
-<a class="sourceLine" id="cb18-16" title="16">    <span class="ot">assert</span>(<span class="kw">false</span>);</a>
-<a class="sourceLine" id="cb18-17" title="17">}</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">enum</span> <span class="kw">class</span> Tabs {</a>
+<a class="sourceLine" id="cb19-2" title="2">    INFO,</a>
+<a class="sourceLine" id="cb19-3" title="3">    CONSOLE,</a>
+<a class="sourceLine" id="cb19-4" title="4">    GRAPH,</a>
+<a class="sourceLine" id="cb19-5" title="5">    PEERS</a>
+<a class="sourceLine" id="cb19-6" title="6">};</a>
+<a class="sourceLine" id="cb19-7" title="7"></a>
+<a class="sourceLine" id="cb19-8" title="8"><span class="dt">int</span> GetInt(Tabs tab)</a>
+<a class="sourceLine" id="cb19-9" title="9">{</a>
+<a class="sourceLine" id="cb19-10" title="10">    <span class="cf">switch</span> (tab) {</a>
+<a class="sourceLine" id="cb19-11" title="11">    <span class="cf">case</span> Tabs::INFO: <span class="cf">return</span> <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb19-12" title="12">    <span class="cf">case</span> Tabs::CONSOLE: <span class="cf">return</span> <span class="dv">1</span>;</a>
+<a class="sourceLine" id="cb19-13" title="13">    <span class="cf">case</span> Tabs::GRAPH: <span class="cf">return</span> <span class="dv">2</span>;</a>
+<a class="sourceLine" id="cb19-14" title="14">    <span class="cf">case</span> Tabs::PEERS: <span class="cf">return</span> <span class="dv">3</span>;</a>
+<a class="sourceLine" id="cb19-15" title="15">    } <span class="co">// no default case, so the compiler can warn about missing cases</span></a>
+<a class="sourceLine" id="cb19-16" title="16">    <span class="ot">assert</span>(<span class="kw">false</span>);</a>
+<a class="sourceLine" id="cb19-17" title="17">}</a></code></pre></div>
 <p><em>Rationale</em>: The comment documents skipping <code>default:</code> label, and it complies with <code>clang-format</code> rules. The assertion prevents firing of <code>-Wreturn-type</code> warning on some compilers.</p>
 <h2 id="strings-and-formatting">Strings and formatting</h2>
 <ul>
@@ -516,15 +526,15 @@ nbproject/
 <li><p>When using <code>LOCK</code>/<code>TRY_LOCK</code> be aware that the lock exists in the context of the current scope, so surround the statement and the code that needs the lock with braces.</p>
 <p>OK:</p></li>
 </ul>
-<div class="sourceCode" id="cb19"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb19-1" title="1">{</a>
-<a class="sourceLine" id="cb19-2" title="2">    TRY_LOCK(cs_vNodes, lockNodes);</a>
-<a class="sourceLine" id="cb19-3" title="3">    ...</a>
-<a class="sourceLine" id="cb19-4" title="4">}</a></code></pre></div>
-<p>Wrong:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb20-1" title="1">TRY_LOCK(cs_vNodes, lockNodes);</a>
-<a class="sourceLine" id="cb20-2" title="2">{</a>
+<div class="sourceCode" id="cb20"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb20-1" title="1">{</a>
+<a class="sourceLine" id="cb20-2" title="2">    TRY_LOCK(cs_vNodes, lockNodes);</a>
 <a class="sourceLine" id="cb20-3" title="3">    ...</a>
 <a class="sourceLine" id="cb20-4" title="4">}</a></code></pre></div>
+<p>Wrong:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb21-1" title="1">TRY_LOCK(cs_vNodes, lockNodes);</a>
+<a class="sourceLine" id="cb21-2" title="2">{</a>
+<a class="sourceLine" id="cb21-3" title="3">    ...</a>
+<a class="sourceLine" id="cb21-4" title="4">}</a></code></pre></div>
 <h2 id="scripts">Scripts</h2>
 <h3 id="shebang">Shebang</h3>
 <ul>
@@ -536,9 +546,9 @@ nbproject/
 </ul>
 <p>OK:</p></li>
 </ul>
-<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb21-1" title="1"><span class="co">#!/usr/bin/env bash</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1"><span class="co">#!/usr/bin/env bash</span></a></code></pre></div>
 <p>Wrong:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb22-1" title="1"><span class="co">#!/bin/bash</span></a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb23-1" title="1"><span class="co">#!/bin/bash</span></a></code></pre></div>
 <h2 id="source-code-organization">Source code organization</h2>
 <ul>
 <li><p>Implementation code should go into the <code>.cpp</code> file and not the <code>.h</code>, unless necessary due to template usage or when performance due to inlining is critical.</p>
@@ -559,13 +569,13 @@ nbproject/
 </ul></li>
 <li><p>Terminate namespaces with a comment (<code>// namespace mynamespace</code>). The comment should be placed on the same line as the brace closing the namespace, e.g.</p></li>
 </ul>
-<div class="sourceCode" id="cb23"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">namespace</span> mynamespace {</a>
-<a class="sourceLine" id="cb23-2" title="2">...</a>
-<a class="sourceLine" id="cb23-3" title="3">} <span class="co">// namespace mynamespace</span></a>
-<a class="sourceLine" id="cb23-4" title="4"></a>
-<a class="sourceLine" id="cb23-5" title="5"><span class="kw">namespace</span> {</a>
-<a class="sourceLine" id="cb23-6" title="6">...</a>
-<a class="sourceLine" id="cb23-7" title="7">} <span class="co">// namespace</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb24-1" title="1"><span class="kw">namespace</span> mynamespace {</a>
+<a class="sourceLine" id="cb24-2" title="2">...</a>
+<a class="sourceLine" id="cb24-3" title="3">} <span class="co">// namespace mynamespace</span></a>
+<a class="sourceLine" id="cb24-4" title="4"></a>
+<a class="sourceLine" id="cb24-5" title="5"><span class="kw">namespace</span> {</a>
+<a class="sourceLine" id="cb24-6" title="6">...</a>
+<a class="sourceLine" id="cb24-7" title="7">} <span class="co">// namespace</span></a></code></pre></div>
 <ul>
 <li><p><em>Rationale</em>: Avoids confusion about the namespace context.</p></li>
 <li><p>Use <code>#include &lt;primitives/transaction.h&gt;</code> bracket syntax instead of <code>#include "primitives/transactions.h"</code> quote syntax.</p>
@@ -574,10 +584,10 @@ nbproject/
 </ul></li>
 <li><p>Use include guards to avoid the problem of double inclusion. The header file <code>foo/bar.h</code> should use the include guard identifier <code>BITCOIN_FOO_BAR_H</code>, e.g.</p></li>
 </ul>
-<div class="sourceCode" id="cb24"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb24-1" title="1"><span class="pp">#ifndef BITCOIN_FOO_BAR_H</span></a>
-<a class="sourceLine" id="cb24-2" title="2"><span class="pp">#define B</span>ITCOIN_FOO_BAR_H</a>
-<a class="sourceLine" id="cb24-3" title="3">...</a>
-<a class="sourceLine" id="cb24-4" title="4"><span class="pp">#endif </span><span class="co">// BITCOIN_FOO_BAR_H</span></a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb25-1" title="1"><span class="pp">#ifndef BITCOIN_FOO_BAR_H</span></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="pp">#define B</span>ITCOIN_FOO_BAR_H</a>
+<a class="sourceLine" id="cb25-3" title="3">...</a>
+<a class="sourceLine" id="cb25-4" title="4"><span class="pp">#endif </span><span class="co">// BITCOIN_FOO_BAR_H</span></a></code></pre></div>
 <h2 id="gui">GUI</h2>
 <ul>
 <li><p>Do not display or manipulate dialogs in model code (classes <code>*Model</code>).</p>
@@ -625,9 +635,9 @@ nbproject/
 <h3 id="file-descriptor-counts">File Descriptor Counts</h3>
 <p>In most configurations, we use the default LevelDB value for <code>max_open_files</code>, which is 1000 at the time of this writing. If LevelDB actually uses this many file descriptors, it will cause problems with Bitcoin's <code>select()</code> loop, because it may cause new sockets to be created where the fd value is &gt;= 1024. For this reason, on 64-bit Unix systems, we rely on an internal LevelDB optimization that uses <code>mmap()</code> + <code>close()</code> to open table files without actually retaining references to the table file descriptors. If you are upgrading LevelDB, you must sanity check the changes to make sure that this assumption remains valid.</p>
 <p>In addition to reviewing the upstream changes in <code>env_posix.cc</code>, you can use <code>lsof</code> to check this. For example, on Linux this command will show open <code>.ldb</code> file counts:</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1">$ <span class="ex">lsof</span> -p <span class="va">$(</span><span class="fu">pidof</span> bitcoind<span class="va">)</span> <span class="kw">|\</span></a>
-<a class="sourceLine" id="cb25-2" title="2">    <span class="fu">awk</span> <span class="st">&#39;BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == &quot;mem&quot;) mem++; else fd++ } END { printf &quot;mem = %s, fd = %s\n&quot;, mem, fd}&#39;</span></a>
-<a class="sourceLine" id="cb25-3" title="3"><span class="ex">mem</span> = 119, fd = 0</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb26-1" title="1">$ <span class="ex">lsof</span> -p <span class="va">$(</span><span class="fu">pidof</span> bitcoind<span class="va">)</span> <span class="kw">|\</span></a>
+<a class="sourceLine" id="cb26-2" title="2">    <span class="fu">awk</span> <span class="st">&#39;BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == &quot;mem&quot;) mem++; else fd++ } END { printf &quot;mem = %s, fd = %s\n&quot;, mem, fd}&#39;</span></a>
+<a class="sourceLine" id="cb26-3" title="3"><span class="ex">mem</span> = 119, fd = 0</a></code></pre></div>
 <p>The <code>mem</code> value shows how many files are mmap'ed, and the <code>fd</code> value shows you many file descriptors these files are using. You should check that <code>fd</code> is a small number (usually 0 on 64-bit hosts).</p>
 <p>See the notes in the <code>SetMaxOpenFiles()</code> function in <code>dbwrapper.cc</code> for more details.</p>
 <h3 id="consensus-compatibility">Consensus Compatibility</h3>
@@ -646,7 +656,7 @@ nbproject/
 </ul>
 <p>The scripted-diff is verified by the tool <code>test/lint/commit-script-check.sh</code>. The tool's default behavior, when supplied with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes the first supplied argument to <code>git rev-list --reverse</code> to determine which commits to verify script-diffs for, ignoring commits that don't conform to the commit message format described above.</p>
 <p>For development, it might be more convenient to verify all scripted-diffs in a range <code>A..B</code>, for example:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb26-1" title="1"><span class="ex">test/lint/commit-script-check.sh</span> origin/master..HEAD</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb27-1" title="1"><span class="ex">test/lint/commit-script-check.sh</span> origin/master..HEAD</a></code></pre></div>
 <h3 id="suggestions-and-examples">Suggestions and examples</h3>
 <p>If you need to replace in multiple files, prefer <code>git ls-files</code> to <code>find</code> or globbing, and <code>git grep</code> to <code>grep</code>, to avoid changing files that are not under version control.</p>
 <p>For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for example, instead of a blanket <code>git ls-files src | xargs sed -i s/apple/orange/</code>, use <code>git grep -l apple src | xargs sed -i s/apple/orange/</code>.</p>
@@ -740,52 +750,52 @@ nbproject/
 <li><p>Interface method definitions should wrap existing functionality instead of implementing new functionality. Any substantial new node or wallet functionality should be implemented in <a href="../src/node/"><code>src/node/</code></a> or <a href="../src/wallet/"><code>src/wallet/</code></a> and just exposed in <a href="../src/interfaces/"><code>src/interfaces/</code></a> instead of being implemented there, so it can be more modular and accessible to unit tests.</p></li>
 <li><p>Interface method parameter and return types should either be serializable or be other interface classes. Interface methods shouldn't pass references to objects that can't be serialized or accessed from another process.</p>
 <p>Examples:</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb28-1" title="1"><span class="co">// Good: takes string argument and returns interface class pointer</span></a>
-<a class="sourceLine" id="cb28-2" title="2"><span class="kw">virtual</span> unique_ptr&lt;interfaces::Wallet&gt; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb28-3" title="3"></a>
-<a class="sourceLine" id="cb28-4" title="4"><span class="co">// Bad: returns CWallet reference that can&#39;t be used from another process</span></a>
-<a class="sourceLine" id="cb28-5" title="5"><span class="kw">virtual</span> CWallet&amp; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb29-1" title="1"><span class="co">// Good: accepts and returns primitive types</span></a>
-<a class="sourceLine" id="cb29-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> findBlock(<span class="at">const</span> uint256&amp; hash, <span class="dt">int</span>&amp; out_height, <span class="dt">int64_t</span>&amp; out_time) = <span class="dv">0</span>;</a>
+<div class="sourceCode" id="cb29"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb29-1" title="1"><span class="co">// Good: takes string argument and returns interface class pointer</span></a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="kw">virtual</span> unique_ptr&lt;interfaces::Wallet&gt; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a>
 <a class="sourceLine" id="cb29-3" title="3"></a>
-<a class="sourceLine" id="cb29-4" title="4"><span class="co">// Bad: returns pointer to internal node in a linked list inaccessible to</span></a>
-<a class="sourceLine" id="cb29-5" title="5"><span class="co">// other processes</span></a>
-<a class="sourceLine" id="cb29-6" title="6"><span class="kw">virtual</span> <span class="at">const</span> CBlockIndex* findBlock(<span class="at">const</span> uint256&amp; hash) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb30-1" title="1"><span class="co">// Good: takes plain callback type and returns interface pointer</span></a>
-<a class="sourceLine" id="cb30-2" title="2"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
-<a class="sourceLine" id="cb30-3" title="3"><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr&lt;interfaces::Handler&gt; handleTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb30-4" title="4"></a>
-<a class="sourceLine" id="cb30-5" title="5"><span class="co">// Bad: returns boost connection specific to local process</span></a>
-<a class="sourceLine" id="cb30-6" title="6"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
-<a class="sourceLine" id="cb30-7" title="7"><span class="kw">virtual</span> <span class="ex">boost::</span>signals2<span class="ex">::</span>scoped_connection connectTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a></code></pre></div></li>
+<a class="sourceLine" id="cb29-4" title="4"><span class="co">// Bad: returns CWallet reference that can&#39;t be used from another process</span></a>
+<a class="sourceLine" id="cb29-5" title="5"><span class="kw">virtual</span> CWallet&amp; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb30-1" title="1"><span class="co">// Good: accepts and returns primitive types</span></a>
+<a class="sourceLine" id="cb30-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> findBlock(<span class="at">const</span> uint256&amp; hash, <span class="dt">int</span>&amp; out_height, <span class="dt">int64_t</span>&amp; out_time) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb30-3" title="3"></a>
+<a class="sourceLine" id="cb30-4" title="4"><span class="co">// Bad: returns pointer to internal node in a linked list inaccessible to</span></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="co">// other processes</span></a>
+<a class="sourceLine" id="cb30-6" title="6"><span class="kw">virtual</span> <span class="at">const</span> CBlockIndex* findBlock(<span class="at">const</span> uint256&amp; hash) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb31-1" title="1"><span class="co">// Good: takes plain callback type and returns interface pointer</span></a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb31-3" title="3"><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr&lt;interfaces::Handler&gt; handleTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb31-4" title="4"></a>
+<a class="sourceLine" id="cb31-5" title="5"><span class="co">// Bad: returns boost connection specific to local process</span></a>
+<a class="sourceLine" id="cb31-6" title="6"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb31-7" title="7"><span class="kw">virtual</span> <span class="ex">boost::</span>signals2<span class="ex">::</span>scoped_connection connectTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For consistency and friendliness to code generation tools, interface method input and inout parameters should be ordered first and output parameters should come last.</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb31-1" title="1"><span class="co">// Good: error output param is last</span></a>
-<a class="sourceLine" id="cb31-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, CAmount max_fee, <span class="bu">std::</span>string&amp; error) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb31-3" title="3"></a>
-<a class="sourceLine" id="cb31-4" title="4"><span class="co">// Bad: error output param is between input params</span></a>
-<a class="sourceLine" id="cb31-5" title="5"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, <span class="bu">std::</span>string&amp; error, CAmount max_fee) = <span class="dv">0</span>;</a></code></pre></div></li>
+<div class="sourceCode" id="cb32"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb32-1" title="1"><span class="co">// Good: error output param is last</span></a>
+<a class="sourceLine" id="cb32-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, CAmount max_fee, <span class="bu">std::</span>string&amp; error) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb32-3" title="3"></a>
+<a class="sourceLine" id="cb32-4" title="4"><span class="co">// Bad: error output param is between input params</span></a>
+<a class="sourceLine" id="cb32-5" title="5"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, <span class="bu">std::</span>string&amp; error, CAmount max_fee) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For friendliness to code generation tools, interface methods should not be overloaded:</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb32-1" title="1"><span class="co">// Good: method names are unique</span></a>
-<a class="sourceLine" id="cb32-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectByAddress(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb32-3" title="3"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectById(NodeId id) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb32-4" title="4"></a>
-<a class="sourceLine" id="cb32-5" title="5"><span class="co">// Bad: methods are overloaded by type</span></a>
-<a class="sourceLine" id="cb32-6" title="6"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb32-7" title="7"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(NodeId id) = <span class="dv">0</span>;</a></code></pre></div></li>
+<div class="sourceCode" id="cb33"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb33-1" title="1"><span class="co">// Good: method names are unique</span></a>
+<a class="sourceLine" id="cb33-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectByAddress(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb33-3" title="3"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectById(NodeId id) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb33-4" title="4"></a>
+<a class="sourceLine" id="cb33-5" title="5"><span class="co">// Bad: methods are overloaded by type</span></a>
+<a class="sourceLine" id="cb33-6" title="6"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb33-7" title="7"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(NodeId id) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For consistency and friendliness to code generation tools, interface method names should be <code>lowerCamelCase</code> and standalone function names should be <code>UpperCamelCase</code>.</p>
 <p>Examples:</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb33-1" title="1"><span class="co">// Good: lowerCamelCase method name</span></a>
-<a class="sourceLine" id="cb33-2" title="2"><span class="kw">virtual</span> <span class="dt">void</span> blockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb33-3" title="3"></a>
-<a class="sourceLine" id="cb33-4" title="4"><span class="co">// Bad: uppercase class method</span></a>
-<a class="sourceLine" id="cb33-5" title="5"><span class="kw">virtual</span> <span class="dt">void</span> BlockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb34"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb34-1" title="1"><span class="co">// Good: UpperCamelCase standalone function name</span></a>
-<a class="sourceLine" id="cb34-2" title="2"><span class="bu">std::</span>unique_ptr&lt;Node&gt; MakeNode(LocalInit&amp; init);</a>
+<div class="sourceCode" id="cb34"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb34-1" title="1"><span class="co">// Good: lowerCamelCase method name</span></a>
+<a class="sourceLine" id="cb34-2" title="2"><span class="kw">virtual</span> <span class="dt">void</span> blockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a>
 <a class="sourceLine" id="cb34-3" title="3"></a>
-<a class="sourceLine" id="cb34-4" title="4"><span class="co">// Bad: lowercase standalone function</span></a>
-<a class="sourceLine" id="cb34-5" title="5"><span class="bu">std::</span>unique_ptr&lt;Node&gt; makeNode(LocalInit&amp; init);</a></code></pre></div>
+<a class="sourceLine" id="cb34-4" title="4"><span class="co">// Bad: uppercase class method</span></a>
+<a class="sourceLine" id="cb34-5" title="5"><span class="kw">virtual</span> <span class="dt">void</span> BlockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb35-1" title="1"><span class="co">// Good: UpperCamelCase standalone function name</span></a>
+<a class="sourceLine" id="cb35-2" title="2"><span class="bu">std::</span>unique_ptr&lt;Node&gt; MakeNode(LocalInit&amp; init);</a>
+<a class="sourceLine" id="cb35-3" title="3"></a>
+<a class="sourceLine" id="cb35-4" title="4"><span class="co">// Bad: lowercase standalone function</span></a>
+<a class="sourceLine" id="cb35-5" title="5"><span class="bu">std::</span>unique_ptr&lt;Node&gt; makeNode(LocalInit&amp; init);</a></code></pre></div>
 <p>Note: This last convention isn't generally followed outside of <a href="../src/interfaces/"><code>src/interfaces/</code></a>, though it did come up for discussion before in <a href="https://github.com/bitcoin/bitcoin/pull/14635">#14635</a>.</p></li>
 </ul>
 </body>
