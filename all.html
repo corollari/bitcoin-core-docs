@@ -1720,7 +1720,7 @@ nbproject/
 <p>Several parts of the repository are subtrees of software maintained elsewhere.</p>
 <p>Some of these are maintained by active developers of Bitcoin Core, in which case changes should probably go directly upstream without being PRed directly against the project. They will be merged back in the next subtree merge.</p>
 <p>Others are external projects without a tight relationship with our project. Changes to these should also be sent upstream, but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated quickly. Cosmetic changes should be purely taken upstream.</p>
-<p>There is a tool in <code>test/lint/git-subtree-check.sh</code> to check a subtree directory for consistency with its upstream repository.</p>
+<p>There is a tool in <code>test/lint/git-subtree-check.sh</code> (<a href="../test/lint#git-subtree-checksh">instructions</a>) to check a subtree directory for consistency with its upstream repository.</p>
 <p>Current subtrees include:</p>
 <ul>
 <li><p>src/leveldb</p>
@@ -2272,15 +2272,17 @@ nbproject/
 <a class="sourceLine" id="cb114-4" title="4">$ <span class="fu">make</span> -C afl/</a>
 <a class="sourceLine" id="cb114-5" title="5">$ <span class="fu">make</span> -C afl/llvm_mode/</a>
 <a class="sourceLine" id="cb114-6" title="6">$ <span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb114-7" title="7">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast++ <span class="ex">./configure</span> --enable-fuzz</a>
-<a class="sourceLine" id="cb114-8" title="8">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb114-9" title="9"><span class="co"># For macOS you may need to ignore x86 compilation checks when running &quot;make&quot;. If so,</span></a>
-<a class="sourceLine" id="cb114-10" title="10"><span class="co"># try compiling using: AFL_NO_X86=1 make</span></a>
-<a class="sourceLine" id="cb114-11" title="11">$ <span class="fu">mkdir</span> -p inputs/ outputs/</a>
-<a class="sourceLine" id="cb114-12" title="12">$ <span class="bu">echo</span> A <span class="op">&gt;</span> inputs/thin-air-input</a>
-<a class="sourceLine" id="cb114-13" title="13">$ <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/bech32</a>
-<a class="sourceLine" id="cb114-14" title="14"><span class="co"># You may have to change a few kernel parameters to test optimally - afl-fuzz</span></a>
-<a class="sourceLine" id="cb114-15" title="15"><span class="co"># will print an error and suggestion if so.</span></a></code></pre></div>
+<a class="sourceLine" id="cb114-7" title="7"><span class="co"># It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz</span></a>
+<a class="sourceLine" id="cb114-8" title="8"><span class="co"># may require more memory via the -m flag.</span></a>
+<a class="sourceLine" id="cb114-9" title="9">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast++ <span class="ex">./configure</span> --enable-fuzz</a>
+<a class="sourceLine" id="cb114-10" title="10">$ <span class="fu">make</span></a>
+<a class="sourceLine" id="cb114-11" title="11"><span class="co"># For macOS you may need to ignore x86 compilation checks when running &quot;make&quot;. If so,</span></a>
+<a class="sourceLine" id="cb114-12" title="12"><span class="co"># try compiling using: AFL_NO_X86=1 make</span></a>
+<a class="sourceLine" id="cb114-13" title="13">$ <span class="fu">mkdir</span> -p inputs/ outputs/</a>
+<a class="sourceLine" id="cb114-14" title="14">$ <span class="bu">echo</span> A <span class="op">&gt;</span> inputs/thin-air-input</a>
+<a class="sourceLine" id="cb114-15" title="15">$ <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/bech32</a>
+<a class="sourceLine" id="cb114-16" title="16"><span class="co"># You may have to change a few kernel parameters to test optimally - afl-fuzz</span></a>
+<a class="sourceLine" id="cb114-17" title="17"><span class="co"># will print an error and suggestion if so.</span></a></code></pre></div>
 <p>Read the <a href="https://github.com/google/afl"><code>afl-fuzz</code> documentation</a> for more information.</p>
 <h1 id="fuzzing-bitcoin-core-using-honggfuzz">Fuzzing Bitcoin Core using Honggfuzz</h1>
 <h2 id="quickstart-guide-2">Quickstart guide</h2>
@@ -2600,7 +2602,7 @@ PREV=P5 N=4 &amp;&amp; git range-diff `git merge-base --all HEAD $PREV`...$PREV 
 <p>Ways to reduce traffic:</p>
 <h2 id="1-use--maxuploadtargetmib-per-day">1. Use <code>-maxuploadtarget=&lt;MiB per day&gt;</code></h2>
 <p>A major component of the traffic is caused by serving historic blocks to other nodes during the initial blocks download phase (syncing up a new node). This option can be specified in MiB per day and is turned off by default. This is <em>not</em> a hard limit; only a threshold to minimize the outbound traffic. When the limit is about to be reached, the uploaded data is cut by no longer serving historic blocks (blocks older than one week). Keep in mind that new nodes require other nodes that are willing to serve historic blocks.</p>
-<p>Peers with the <code>noban</code> permission will never be disconnected, although their traffic counts for calculating the target.</p>
+<p>Peers with the <code>download</code> permission will never be disconnected, although their traffic counts for calculating the target.</p>
 <h2 id="2-disable-listening--listen0">2. Disable "listening" (<code>-listen=0</code>)</h2>
 <p>Disabling listening will result in fewer nodes connected (remember the maximum of 10 outbound peers). Fewer nodes will result in less traffic usage as you are relaying blocks and transactions to fewer nodes.</p>
 <h2 id="3-reduce-maximum-connections--maxconnectionsnum">3. Reduce maximum connections (<code>-maxconnections=&lt;num&gt;</code>)</h2>

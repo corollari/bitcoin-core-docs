@@ -25,7 +25,7 @@
 <p>Ways to reduce traffic:</p>
 <h2 id="1-use--maxuploadtargetmib-per-day">1. Use <code>-maxuploadtarget=&lt;MiB per day&gt;</code></h2>
 <p>A major component of the traffic is caused by serving historic blocks to other nodes during the initial blocks download phase (syncing up a new node). This option can be specified in MiB per day and is turned off by default. This is <em>not</em> a hard limit; only a threshold to minimize the outbound traffic. When the limit is about to be reached, the uploaded data is cut by no longer serving historic blocks (blocks older than one week). Keep in mind that new nodes require other nodes that are willing to serve historic blocks.</p>
-<p>Peers with the <code>noban</code> permission will never be disconnected, although their traffic counts for calculating the target.</p>
+<p>Peers with the <code>download</code> permission will never be disconnected, although their traffic counts for calculating the target.</p>
 <h2 id="2-disable-listening--listen0">2. Disable "listening" (<code>-listen=0</code>)</h2>
 <p>Disabling listening will result in fewer nodes connected (remember the maximum of 10 outbound peers). Fewer nodes will result in less traffic usage as you are relaying blocks and transactions to fewer nodes.</p>
 <h2 id="3-reduce-maximum-connections--maxconnectionsnum">3. Reduce maximum connections (<code>-maxconnections=&lt;num&gt;</code>)</h2>
