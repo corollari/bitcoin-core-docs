@@ -144,7 +144,7 @@
 <tr class="odd">
 <td><code>./</code></td>
 <td><code>bitcoin.conf</code></td>
-<td>Contains <a href="bitcoin-conf.html">configuration settings</a> for <code>bitcoind</code> or <code>bitcoin-qt</code>; can be specified by <code>-conf</code> option</td>
+<td>User-defined <a href="bitcoin-conf.html">configuration settings</a> for <code>bitcoind</code> or <code>bitcoin-qt</code>. File is not written to by the software and must be created manually. Path can be specified by <code>-conf</code> option</td>
 </tr>
 <tr class="even">
 <td><code>./</code></td>
@@ -183,10 +183,15 @@
 </tr>
 <tr class="odd">
 <td><code>./</code></td>
+<td><code>settings.json</code></td>
+<td>Read-write settings set through GUI or RPC interfaces, augmenting manual settings from <a href="bitcoin-conf.html">bitcoin.conf</a>. File is created automatically if read-write settings storage is not disabled with <code>-nosettings</code> option. Path can be specified with <code>-settings</code> option</td>
+</tr>
+<tr class="even">
+<td><code>./</code></td>
 <td><code>.cookie</code></td>
 <td>Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by <code>-rpccookiefile</code> option</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>./</code></td>
 <td><code>.lock</code></td>
 <td>Data directory lock file</td>
