@@ -477,7 +477,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 <div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb18-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
 <a class="sourceLine" id="cb18-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
 <h1 id="openbsd-build-guide">OpenBSD build guide</h1>
-<p>(updated for OpenBSD 6.4)</p>
+<p>(updated for OpenBSD 6.7)</p>
 <p>This guide describes how to build bitcoind and command-line utilities on OpenBSD.</p>
 <p>OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.</p>
 <h2 id="preparation-2">Preparation</h2>
@@ -485,11 +485,11 @@ git clone https://github.com/bitcoin/bitcoin.git
 <div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb19-1" title="1"><span class="ex">pkg_add</span> git gmake libevent libtool boost</a>
 <a class="sourceLine" id="cb19-2" title="2"><span class="ex">pkg_add</span> autoconf <span class="co"># (select highest version, e.g. 2.69)</span></a>
 <a class="sourceLine" id="cb19-3" title="3"><span class="ex">pkg_add</span> automake <span class="co"># (select highest version, e.g. 1.16)</span></a>
-<a class="sourceLine" id="cb19-4" title="4"><span class="ex">pkg_add</span> python <span class="co"># (select highest version, e.g. 3.6)</span></a>
+<a class="sourceLine" id="cb19-4" title="4"><span class="ex">pkg_add</span> python <span class="co"># (select highest version, e.g. 3.8)</span></a>
 <a class="sourceLine" id="cb19-5" title="5"></a>
 <a class="sourceLine" id="cb19-6" title="6"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
 <p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
-<p><strong>Important</strong>: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is part of the base image, and while building it is necessary to make sure that this compiler is used and not ancient g++ 4.2.1. This is done by appending <code>CC=cc CXX=c++</code> to configuration commands. Mixing different compilers within the same executable will result in linker errors.</p>
+<p><strong>Important</strong>: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is part of the base image, and while building it is necessary to make sure that this compiler is used and not ancient g++ 4.2.1. This is done by appending <code>CC=cc CC_FOR_BUILD=cc CXX=c++</code> to configuration commands. Mixing different compilers within the same executable will result in errors.</p>
 <h3 id="building-berkeleydb-2">Building BerkeleyDB</h3>
 <p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
 <p>It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library from ports, for the same reason as boost above (g++/libstd++ incompatibility). If you have to build it yourself, you can use <a href="/contrib/install_db4.sh">the installation script included in contrib/</a> like so:</p>
@@ -516,7 +516,7 @@ git clone https://github.com/bitcoin/bitcoin.git
 <a class="sourceLine" id="cb23-3" title="3">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
 <a class="sourceLine" id="cb23-4" title="4">    MAKE=gmake</a></code></pre></div>
 <p>To configure without wallet:</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CXX=c++ MAKE=gmake</a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb24-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake</a></code></pre></div>
 <p>Build and run the tests:</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb25-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
 <a class="sourceLine" id="cb25-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
