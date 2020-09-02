@@ -1641,19 +1641,75 @@ nbproject/
 <p>When using nested cycles, do not name the inner cycle variable the same as in the upper cycle, etc.</p>
 <h2 id="threads-and-synchronization">Threads and synchronization</h2>
 <ul>
+<li><p>Prefer <code>Mutex</code> type to <code>RecursiveMutex</code> one</p></li>
+<li><p>Consistently use <a href="https://clang.llvm.org/docs/ThreadSafetyAnalysis.html">Clang Thread Safety Analysis</a> annotations to get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with run-time asserts in function definitions:</p></li>
+</ul>
+<div class="sourceCode" id="cb94"><pre class="sourceCode C++"><code class="sourceCode cpp"><a class="sourceLine" id="cb94-1" title="1"><span class="co">// txmempool.h</span></a>
+<a class="sourceLine" id="cb94-2" title="2"><span class="kw">class</span> CTxMemPool</a>
+<a class="sourceLine" id="cb94-3" title="3">{</a>
+<a class="sourceLine" id="cb94-4" title="4"><span class="kw">public</span>:</a>
+<a class="sourceLine" id="cb94-5" title="5">    ...</a>
+<a class="sourceLine" id="cb94-6" title="6">    <span class="at">mutable</span> RecursiveMutex cs;</a>
+<a class="sourceLine" id="cb94-7" title="7">    ...</a>
+<a class="sourceLine" id="cb94-8" title="8">    <span class="dt">void</span> UpdateTransactionsFromBlock(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);</a>
+<a class="sourceLine" id="cb94-9" title="9">    ...</a>
+<a class="sourceLine" id="cb94-10" title="10">}</a>
+<a class="sourceLine" id="cb94-11" title="11"></a>
+<a class="sourceLine" id="cb94-12" title="12"><span class="co">// txmempool.cpp</span></a>
+<a class="sourceLine" id="cb94-13" title="13"><span class="dt">void</span> CTxMemPool::UpdateTransactionsFromBlock(...)</a>
+<a class="sourceLine" id="cb94-14" title="14">{</a>
+<a class="sourceLine" id="cb94-15" title="15">    AssertLockHeld(::cs_main);</a>
+<a class="sourceLine" id="cb94-16" title="16">    AssertLockHeld(cs);</a>
+<a class="sourceLine" id="cb94-17" title="17">    ...</a>
+<a class="sourceLine" id="cb94-18" title="18">}</a></code></pre></div>
+<div class="sourceCode" id="cb95"><pre class="sourceCode C++"><code class="sourceCode cpp"><a class="sourceLine" id="cb95-1" title="1"><span class="co">// validation.h</span></a>
+<a class="sourceLine" id="cb95-2" title="2"><span class="kw">class</span> ChainstateManager</a>
+<a class="sourceLine" id="cb95-3" title="3">{</a>
+<a class="sourceLine" id="cb95-4" title="4"><span class="kw">public</span>:</a>
+<a class="sourceLine" id="cb95-5" title="5">    ...</a>
+<a class="sourceLine" id="cb95-6" title="6">    <span class="dt">bool</span> ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);</a>
+<a class="sourceLine" id="cb95-7" title="7">    ...</a>
+<a class="sourceLine" id="cb95-8" title="8">}</a>
+<a class="sourceLine" id="cb95-9" title="9"></a>
+<a class="sourceLine" id="cb95-10" title="10"><span class="co">// validation.cpp</span></a>
+<a class="sourceLine" id="cb95-11" title="11"><span class="dt">bool</span> ChainstateManager::ProcessNewBlock(...)</a>
+<a class="sourceLine" id="cb95-12" title="12">{</a>
+<a class="sourceLine" id="cb95-13" title="13">    AssertLockNotHeld(::cs_main);</a>
+<a class="sourceLine" id="cb95-14" title="14">    ...</a>
+<a class="sourceLine" id="cb95-15" title="15">    LOCK(::cs_main);</a>
+<a class="sourceLine" id="cb95-16" title="16">    ...</a>
+<a class="sourceLine" id="cb95-17" title="17">}</a></code></pre></div>
+<ul>
+<li>When Clang Thread Safety Analysis is unable to determine if a mutex is locked, use <code>LockAssertion</code> class instances:</li>
+</ul>
+<div class="sourceCode" id="cb96"><pre class="sourceCode C++"><code class="sourceCode cpp"><a class="sourceLine" id="cb96-1" title="1"><span class="co">// net_processing.h</span></a>
+<a class="sourceLine" id="cb96-2" title="2"><span class="dt">void</span> RelayTransaction(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);</a>
+<a class="sourceLine" id="cb96-3" title="3"></a>
+<a class="sourceLine" id="cb96-4" title="4"><span class="co">// net_processing.cpp</span></a>
+<a class="sourceLine" id="cb96-5" title="5"><span class="dt">void</span> RelayTransaction(...)</a>
+<a class="sourceLine" id="cb96-6" title="6">{</a>
+<a class="sourceLine" id="cb96-7" title="7">    AssertLockHeld(::cs_main);</a>
+<a class="sourceLine" id="cb96-8" title="8"></a>
+<a class="sourceLine" id="cb96-9" title="9">    connman.ForEachNode([&amp;txid, &amp;wtxid](CNode* pnode) {</a>
+<a class="sourceLine" id="cb96-10" title="10">        LockAssertion lock(::cs_main);</a>
+<a class="sourceLine" id="cb96-11" title="11">        ...</a>
+<a class="sourceLine" id="cb96-12" title="12">    });</a>
+<a class="sourceLine" id="cb96-13" title="13">}</a>
+<a class="sourceLine" id="cb96-14" title="14"></a></code></pre></div>
+<ul>
 <li><p>Build and run tests with <code>-DDEBUG_LOCKORDER</code> to verify that no potential deadlocks are introduced. As of 0.12, this is defined by default when configuring with <code>--enable-debug</code>.</p></li>
 <li><p>When using <code>LOCK</code>/<code>TRY_LOCK</code> be aware that the lock exists in the context of the current scope, so surround the statement and the code that needs the lock with braces.</p>
 <p>OK:</p></li>
 </ul>
-<div class="sourceCode" id="cb94"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb94-1" title="1">{</a>
-<a class="sourceLine" id="cb94-2" title="2">    TRY_LOCK(cs_vNodes, lockNodes);</a>
-<a class="sourceLine" id="cb94-3" title="3">    ...</a>
-<a class="sourceLine" id="cb94-4" title="4">}</a></code></pre></div>
+<div class="sourceCode" id="cb97"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb97-1" title="1">{</a>
+<a class="sourceLine" id="cb97-2" title="2">    TRY_LOCK(cs_vNodes, lockNodes);</a>
+<a class="sourceLine" id="cb97-3" title="3">    ...</a>
+<a class="sourceLine" id="cb97-4" title="4">}</a></code></pre></div>
 <p>Wrong:</p>
-<div class="sourceCode" id="cb95"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb95-1" title="1">TRY_LOCK(cs_vNodes, lockNodes);</a>
-<a class="sourceLine" id="cb95-2" title="2">{</a>
-<a class="sourceLine" id="cb95-3" title="3">    ...</a>
-<a class="sourceLine" id="cb95-4" title="4">}</a></code></pre></div>
+<div class="sourceCode" id="cb98"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb98-1" title="1">TRY_LOCK(cs_vNodes, lockNodes);</a>
+<a class="sourceLine" id="cb98-2" title="2">{</a>
+<a class="sourceLine" id="cb98-3" title="3">    ...</a>
+<a class="sourceLine" id="cb98-4" title="4">}</a></code></pre></div>
 <h2 id="scripts">Scripts</h2>
 <h3 id="shebang">Shebang</h3>
 <ul>
@@ -1665,9 +1721,9 @@ nbproject/
 </ul>
 <p>OK:</p></li>
 </ul>
-<div class="sourceCode" id="cb96"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb96-1" title="1"><span class="co">#!/usr/bin/env bash</span></a></code></pre></div>
+<div class="sourceCode" id="cb99"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb99-1" title="1"><span class="co">#!/usr/bin/env bash</span></a></code></pre></div>
 <p>Wrong:</p>
-<div class="sourceCode" id="cb97"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb97-1" title="1"><span class="co">#!/bin/bash</span></a></code></pre></div>
+<div class="sourceCode" id="cb100"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb100-1" title="1"><span class="co">#!/bin/bash</span></a></code></pre></div>
 <h2 id="source-code-organization">Source code organization</h2>
 <ul>
 <li><p>Implementation code should go into the <code>.cpp</code> file and not the <code>.h</code>, unless necessary due to template usage or when performance due to inlining is critical.</p>
@@ -1688,13 +1744,13 @@ nbproject/
 </ul></li>
 <li><p>Terminate namespaces with a comment (<code>// namespace mynamespace</code>). The comment should be placed on the same line as the brace closing the namespace, e.g.</p></li>
 </ul>
-<div class="sourceCode" id="cb98"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb98-1" title="1"><span class="kw">namespace</span> mynamespace {</a>
-<a class="sourceLine" id="cb98-2" title="2">...</a>
-<a class="sourceLine" id="cb98-3" title="3">} <span class="co">// namespace mynamespace</span></a>
-<a class="sourceLine" id="cb98-4" title="4"></a>
-<a class="sourceLine" id="cb98-5" title="5"><span class="kw">namespace</span> {</a>
-<a class="sourceLine" id="cb98-6" title="6">...</a>
-<a class="sourceLine" id="cb98-7" title="7">} <span class="co">// namespace</span></a></code></pre></div>
+<div class="sourceCode" id="cb101"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb101-1" title="1"><span class="kw">namespace</span> mynamespace {</a>
+<a class="sourceLine" id="cb101-2" title="2">...</a>
+<a class="sourceLine" id="cb101-3" title="3">} <span class="co">// namespace mynamespace</span></a>
+<a class="sourceLine" id="cb101-4" title="4"></a>
+<a class="sourceLine" id="cb101-5" title="5"><span class="kw">namespace</span> {</a>
+<a class="sourceLine" id="cb101-6" title="6">...</a>
+<a class="sourceLine" id="cb101-7" title="7">} <span class="co">// namespace</span></a></code></pre></div>
 <ul>
 <li><p><em>Rationale</em>: Avoids confusion about the namespace context.</p></li>
 <li><p>Use <code>#include &lt;primitives/transaction.h&gt;</code> bracket syntax instead of <code>#include "primitives/transactions.h"</code> quote syntax.</p>
@@ -1703,10 +1759,10 @@ nbproject/
 </ul></li>
 <li><p>Use include guards to avoid the problem of double inclusion. The header file <code>foo/bar.h</code> should use the include guard identifier <code>BITCOIN_FOO_BAR_H</code>, e.g.</p></li>
 </ul>
-<div class="sourceCode" id="cb99"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb99-1" title="1"><span class="pp">#ifndef BITCOIN_FOO_BAR_H</span></a>
-<a class="sourceLine" id="cb99-2" title="2"><span class="pp">#define B</span>ITCOIN_FOO_BAR_H</a>
-<a class="sourceLine" id="cb99-3" title="3">...</a>
-<a class="sourceLine" id="cb99-4" title="4"><span class="pp">#endif </span><span class="co">// BITCOIN_FOO_BAR_H</span></a></code></pre></div>
+<div class="sourceCode" id="cb102"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb102-1" title="1"><span class="pp">#ifndef BITCOIN_FOO_BAR_H</span></a>
+<a class="sourceLine" id="cb102-2" title="2"><span class="pp">#define B</span>ITCOIN_FOO_BAR_H</a>
+<a class="sourceLine" id="cb102-3" title="3">...</a>
+<a class="sourceLine" id="cb102-4" title="4"><span class="pp">#endif </span><span class="co">// BITCOIN_FOO_BAR_H</span></a></code></pre></div>
 <h2 id="gui">GUI</h2>
 <ul>
 <li><p>Do not display or manipulate dialogs in model code (classes <code>*Model</code>).</p>
@@ -1754,9 +1810,9 @@ nbproject/
 <h3 id="file-descriptor-counts">File Descriptor Counts</h3>
 <p>In most configurations, we use the default LevelDB value for <code>max_open_files</code>, which is 1000 at the time of this writing. If LevelDB actually uses this many file descriptors, it will cause problems with Bitcoin's <code>select()</code> loop, because it may cause new sockets to be created where the fd value is &gt;= 1024. For this reason, on 64-bit Unix systems, we rely on an internal LevelDB optimization that uses <code>mmap()</code> + <code>close()</code> to open table files without actually retaining references to the table file descriptors. If you are upgrading LevelDB, you must sanity check the changes to make sure that this assumption remains valid.</p>
 <p>In addition to reviewing the upstream changes in <code>env_posix.cc</code>, you can use <code>lsof</code> to check this. For example, on Linux this command will show open <code>.ldb</code> file counts:</p>
-<div class="sourceCode" id="cb100"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb100-1" title="1">$ <span class="ex">lsof</span> -p <span class="va">$(</span><span class="fu">pidof</span> bitcoind<span class="va">)</span> <span class="kw">|\</span></a>
-<a class="sourceLine" id="cb100-2" title="2">    <span class="fu">awk</span> <span class="st">&#39;BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == &quot;mem&quot;) mem++; else fd++ } END { printf &quot;mem = %s, fd = %s\n&quot;, mem, fd}&#39;</span></a>
-<a class="sourceLine" id="cb100-3" title="3"><span class="ex">mem</span> = 119, fd = 0</a></code></pre></div>
+<div class="sourceCode" id="cb103"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb103-1" title="1">$ <span class="ex">lsof</span> -p <span class="va">$(</span><span class="fu">pidof</span> bitcoind<span class="va">)</span> <span class="kw">|\</span></a>
+<a class="sourceLine" id="cb103-2" title="2">    <span class="fu">awk</span> <span class="st">&#39;BEGIN { fd=0; mem=0; } /ldb$/ { if ($4 == &quot;mem&quot;) mem++; else fd++ } END { printf &quot;mem = %s, fd = %s\n&quot;, mem, fd}&#39;</span></a>
+<a class="sourceLine" id="cb103-3" title="3"><span class="ex">mem</span> = 119, fd = 0</a></code></pre></div>
 <p>The <code>mem</code> value shows how many files are mmap'ed, and the <code>fd</code> value shows you many file descriptors these files are using. You should check that <code>fd</code> is a small number (usually 0 on 64-bit hosts).</p>
 <p>See the notes in the <code>SetMaxOpenFiles()</code> function in <code>dbwrapper.cc</code> for more details.</p>
 <h3 id="consensus-compatibility">Consensus Compatibility</h3>
@@ -1775,7 +1831,7 @@ nbproject/
 </ul>
 <p>The scripted-diff is verified by the tool <code>test/lint/commit-script-check.sh</code>. The tool's default behavior, when supplied with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes the first supplied argument to <code>git rev-list --reverse</code> to determine which commits to verify script-diffs for, ignoring commits that don't conform to the commit message format described above.</p>
 <p>For development, it might be more convenient to verify all scripted-diffs in a range <code>A..B</code>, for example:</p>
-<div class="sourceCode" id="cb101"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb101-1" title="1"><span class="ex">test/lint/commit-script-check.sh</span> origin/master..HEAD</a></code></pre></div>
+<div class="sourceCode" id="cb104"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb104-1" title="1"><span class="ex">test/lint/commit-script-check.sh</span> origin/master..HEAD</a></code></pre></div>
 <h3 id="suggestions-and-examples">Suggestions and examples</h3>
 <p>If you need to replace in multiple files, prefer <code>git ls-files</code> to <code>find</code> or globbing, and <code>git grep</code> to <code>grep</code>, to avoid changing files that are not under version control.</p>
 <p>For efficient replacement scripts, reduce the selection to the files that potentially need to be modified, so for example, instead of a blanket <code>git ls-files src | xargs sed -i s/apple/orange/</code>, use <code>git grep -l apple src | xargs sed -i s/apple/orange/</code>.</p>
@@ -1869,52 +1925,52 @@ nbproject/
 <li><p>Interface method definitions should wrap existing functionality instead of implementing new functionality. Any substantial new node or wallet functionality should be implemented in <a href="../src/node/"><code>src/node/</code></a> or <a href="../src/wallet/"><code>src/wallet/</code></a> and just exposed in <a href="../src/interfaces/"><code>src/interfaces/</code></a> instead of being implemented there, so it can be more modular and accessible to unit tests.</p></li>
 <li><p>Interface method parameter and return types should either be serializable or be other interface classes. Interface methods shouldn't pass references to objects that can't be serialized or accessed from another process.</p>
 <p>Examples:</p>
-<div class="sourceCode" id="cb103"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb103-1" title="1"><span class="co">// Good: takes string argument and returns interface class pointer</span></a>
-<a class="sourceLine" id="cb103-2" title="2"><span class="kw">virtual</span> unique_ptr&lt;interfaces::Wallet&gt; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb103-3" title="3"></a>
-<a class="sourceLine" id="cb103-4" title="4"><span class="co">// Bad: returns CWallet reference that can&#39;t be used from another process</span></a>
-<a class="sourceLine" id="cb103-5" title="5"><span class="kw">virtual</span> CWallet&amp; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb104"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb104-1" title="1"><span class="co">// Good: accepts and returns primitive types</span></a>
-<a class="sourceLine" id="cb104-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> findBlock(<span class="at">const</span> uint256&amp; hash, <span class="dt">int</span>&amp; out_height, <span class="dt">int64_t</span>&amp; out_time) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb104-3" title="3"></a>
-<a class="sourceLine" id="cb104-4" title="4"><span class="co">// Bad: returns pointer to internal node in a linked list inaccessible to</span></a>
-<a class="sourceLine" id="cb104-5" title="5"><span class="co">// other processes</span></a>
-<a class="sourceLine" id="cb104-6" title="6"><span class="kw">virtual</span> <span class="at">const</span> CBlockIndex* findBlock(<span class="at">const</span> uint256&amp; hash) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb105"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb105-1" title="1"><span class="co">// Good: takes plain callback type and returns interface pointer</span></a>
-<a class="sourceLine" id="cb105-2" title="2"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
-<a class="sourceLine" id="cb105-3" title="3"><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr&lt;interfaces::Handler&gt; handleTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb105-4" title="4"></a>
-<a class="sourceLine" id="cb105-5" title="5"><span class="co">// Bad: returns boost connection specific to local process</span></a>
-<a class="sourceLine" id="cb105-6" title="6"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
-<a class="sourceLine" id="cb105-7" title="7"><span class="kw">virtual</span> <span class="ex">boost::</span>signals2<span class="ex">::</span>scoped_connection connectTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a></code></pre></div></li>
+<div class="sourceCode" id="cb106"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb106-1" title="1"><span class="co">// Good: takes string argument and returns interface class pointer</span></a>
+<a class="sourceLine" id="cb106-2" title="2"><span class="kw">virtual</span> unique_ptr&lt;interfaces::Wallet&gt; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb106-3" title="3"></a>
+<a class="sourceLine" id="cb106-4" title="4"><span class="co">// Bad: returns CWallet reference that can&#39;t be used from another process</span></a>
+<a class="sourceLine" id="cb106-5" title="5"><span class="kw">virtual</span> CWallet&amp; loadWallet(<span class="bu">std::</span>string filename) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb107"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb107-1" title="1"><span class="co">// Good: accepts and returns primitive types</span></a>
+<a class="sourceLine" id="cb107-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> findBlock(<span class="at">const</span> uint256&amp; hash, <span class="dt">int</span>&amp; out_height, <span class="dt">int64_t</span>&amp; out_time) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb107-3" title="3"></a>
+<a class="sourceLine" id="cb107-4" title="4"><span class="co">// Bad: returns pointer to internal node in a linked list inaccessible to</span></a>
+<a class="sourceLine" id="cb107-5" title="5"><span class="co">// other processes</span></a>
+<a class="sourceLine" id="cb107-6" title="6"><span class="kw">virtual</span> <span class="at">const</span> CBlockIndex* findBlock(<span class="at">const</span> uint256&amp; hash) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb108"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb108-1" title="1"><span class="co">// Good: takes plain callback type and returns interface pointer</span></a>
+<a class="sourceLine" id="cb108-2" title="2"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb108-3" title="3"><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr&lt;interfaces::Handler&gt; handleTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb108-4" title="4"></a>
+<a class="sourceLine" id="cb108-5" title="5"><span class="co">// Bad: returns boost connection specific to local process</span></a>
+<a class="sourceLine" id="cb108-6" title="6"><span class="kw">using</span> TipChangedFn = <span class="bu">std::</span>function&lt;<span class="dt">void</span>(<span class="dt">int</span> block_height, <span class="dt">int64_t</span> block_time)&gt;;</a>
+<a class="sourceLine" id="cb108-7" title="7"><span class="kw">virtual</span> <span class="ex">boost::</span>signals2<span class="ex">::</span>scoped_connection connectTipChanged(TipChangedFn fn) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For consistency and friendliness to code generation tools, interface method input and inout parameters should be ordered first and output parameters should come last.</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb106"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb106-1" title="1"><span class="co">// Good: error output param is last</span></a>
-<a class="sourceLine" id="cb106-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, CAmount max_fee, <span class="bu">std::</span>string&amp; error) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb106-3" title="3"></a>
-<a class="sourceLine" id="cb106-4" title="4"><span class="co">// Bad: error output param is between input params</span></a>
-<a class="sourceLine" id="cb106-5" title="5"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, <span class="bu">std::</span>string&amp; error, CAmount max_fee) = <span class="dv">0</span>;</a></code></pre></div></li>
+<div class="sourceCode" id="cb109"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb109-1" title="1"><span class="co">// Good: error output param is last</span></a>
+<a class="sourceLine" id="cb109-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, CAmount max_fee, <span class="bu">std::</span>string&amp; error) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb109-3" title="3"></a>
+<a class="sourceLine" id="cb109-4" title="4"><span class="co">// Bad: error output param is between input params</span></a>
+<a class="sourceLine" id="cb109-5" title="5"><span class="kw">virtual</span> <span class="dt">bool</span> broadcastTransaction(<span class="at">const</span> CTransactionRef&amp; tx, <span class="bu">std::</span>string&amp; error, CAmount max_fee) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For friendliness to code generation tools, interface methods should not be overloaded:</p>
 <p>Example:</p>
-<div class="sourceCode" id="cb107"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb107-1" title="1"><span class="co">// Good: method names are unique</span></a>
-<a class="sourceLine" id="cb107-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectByAddress(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb107-3" title="3"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectById(NodeId id) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb107-4" title="4"></a>
-<a class="sourceLine" id="cb107-5" title="5"><span class="co">// Bad: methods are overloaded by type</span></a>
-<a class="sourceLine" id="cb107-6" title="6"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb107-7" title="7"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(NodeId id) = <span class="dv">0</span>;</a></code></pre></div></li>
+<div class="sourceCode" id="cb110"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb110-1" title="1"><span class="co">// Good: method names are unique</span></a>
+<a class="sourceLine" id="cb110-2" title="2"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectByAddress(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb110-3" title="3"><span class="kw">virtual</span> <span class="dt">bool</span> disconnectById(NodeId id) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb110-4" title="4"></a>
+<a class="sourceLine" id="cb110-5" title="5"><span class="co">// Bad: methods are overloaded by type</span></a>
+<a class="sourceLine" id="cb110-6" title="6"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(<span class="at">const</span> CNetAddr&amp; net_addr) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb110-7" title="7"><span class="kw">virtual</span> <span class="dt">bool</span> <span class="fu">disconnect</span>(NodeId id) = <span class="dv">0</span>;</a></code></pre></div></li>
 <li><p>For consistency and friendliness to code generation tools, interface method names should be <code>lowerCamelCase</code> and standalone function names should be <code>UpperCamelCase</code>.</p>
 <p>Examples:</p>
-<div class="sourceCode" id="cb108"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb108-1" title="1"><span class="co">// Good: lowerCamelCase method name</span></a>
-<a class="sourceLine" id="cb108-2" title="2"><span class="kw">virtual</span> <span class="dt">void</span> blockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a>
-<a class="sourceLine" id="cb108-3" title="3"></a>
-<a class="sourceLine" id="cb108-4" title="4"><span class="co">// Bad: uppercase class method</span></a>
-<a class="sourceLine" id="cb108-5" title="5"><span class="kw">virtual</span> <span class="dt">void</span> BlockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a></code></pre></div>
-<div class="sourceCode" id="cb109"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb109-1" title="1"><span class="co">// Good: UpperCamelCase standalone function name</span></a>
-<a class="sourceLine" id="cb109-2" title="2"><span class="bu">std::</span>unique_ptr&lt;Node&gt; MakeNode(LocalInit&amp; init);</a>
-<a class="sourceLine" id="cb109-3" title="3"></a>
-<a class="sourceLine" id="cb109-4" title="4"><span class="co">// Bad: lowercase standalone function</span></a>
-<a class="sourceLine" id="cb109-5" title="5"><span class="bu">std::</span>unique_ptr&lt;Node&gt; makeNode(LocalInit&amp; init);</a></code></pre></div>
+<div class="sourceCode" id="cb111"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb111-1" title="1"><span class="co">// Good: lowerCamelCase method name</span></a>
+<a class="sourceLine" id="cb111-2" title="2"><span class="kw">virtual</span> <span class="dt">void</span> blockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a>
+<a class="sourceLine" id="cb111-3" title="3"></a>
+<a class="sourceLine" id="cb111-4" title="4"><span class="co">// Bad: uppercase class method</span></a>
+<a class="sourceLine" id="cb111-5" title="5"><span class="kw">virtual</span> <span class="dt">void</span> BlockConnected(<span class="at">const</span> CBlock&amp; block, <span class="dt">int</span> height) = <span class="dv">0</span>;</a></code></pre></div>
+<div class="sourceCode" id="cb112"><pre class="sourceCode c++"><code class="sourceCode cpp"><a class="sourceLine" id="cb112-1" title="1"><span class="co">// Good: UpperCamelCase standalone function name</span></a>
+<a class="sourceLine" id="cb112-2" title="2"><span class="bu">std::</span>unique_ptr&lt;Node&gt; MakeNode(LocalInit&amp; init);</a>
+<a class="sourceLine" id="cb112-3" title="3"></a>
+<a class="sourceLine" id="cb112-4" title="4"><span class="co">// Bad: lowercase standalone function</span></a>
+<a class="sourceLine" id="cb112-5" title="5"><span class="bu">std::</span>unique_ptr&lt;Node&gt; makeNode(LocalInit&amp; init);</a></code></pre></div>
 <p>Note: This last convention isn't generally followed outside of <a href="../src/interfaces/"><code>src/interfaces/</code></a>, though it did come up for discussion before in <a href="https://github.com/bitcoin/bitcoin/pull/14635">#14635</a>. Expectations for DNS Seed operators ====================================</p></li>
 </ul>
 <p>Bitcoin Core attempts to minimize the level of trust in DNS seeds, but DNS seeds still pose a small amount of risk for the network. As such, DNS seeds must be run by entities which have some minimum level of trust within the Bitcoin community.</p>
@@ -2201,67 +2257,67 @@ nbproject/
 <h1 id="fuzzing-bitcoin-core-using-libfuzzer">Fuzzing Bitcoin Core using libFuzzer</h1>
 <h2 id="quickstart-guide">Quickstart guide</h2>
 <p>To quickly get started fuzzing Bitcoin Core using <a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer</a>:</p>
-<div class="sourceCode" id="cb110"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb110-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
-<a class="sourceLine" id="cb110-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
-<a class="sourceLine" id="cb110-3" title="3">$ <span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb110-4" title="4">$ <span class="va">CC=</span>clang <span class="va">CXX=</span>clang++ <span class="ex">./configure</span> --enable-fuzz --with-sanitizers=address,fuzzer,undefined</a>
-<a class="sourceLine" id="cb110-5" title="5"><span class="co"># macOS users: If you have problem with this step then make sure to read &quot;macOS hints for</span></a>
-<a class="sourceLine" id="cb110-6" title="6"><span class="co"># libFuzzer&quot; on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.html#macos-hints-for-libfuzzer</span></a>
-<a class="sourceLine" id="cb110-7" title="7">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb110-8" title="8">$ <span class="ex">src/test/fuzz/process_message</span></a>
-<a class="sourceLine" id="cb110-9" title="9"><span class="co"># abort fuzzing using ctrl-c</span></a></code></pre></div>
+<div class="sourceCode" id="cb113"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb113-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
+<a class="sourceLine" id="cb113-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
+<a class="sourceLine" id="cb113-3" title="3">$ <span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb113-4" title="4">$ <span class="va">CC=</span>clang <span class="va">CXX=</span>clang++ <span class="ex">./configure</span> --enable-fuzz --with-sanitizers=address,fuzzer,undefined</a>
+<a class="sourceLine" id="cb113-5" title="5"><span class="co"># macOS users: If you have problem with this step then make sure to read &quot;macOS hints for</span></a>
+<a class="sourceLine" id="cb113-6" title="6"><span class="co"># libFuzzer&quot; on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.html#macos-hints-for-libfuzzer</span></a>
+<a class="sourceLine" id="cb113-7" title="7">$ <span class="fu">make</span></a>
+<a class="sourceLine" id="cb113-8" title="8">$ <span class="ex">src/test/fuzz/process_message</span></a>
+<a class="sourceLine" id="cb113-9" title="9"><span class="co"># abort fuzzing using ctrl-c</span></a></code></pre></div>
 <h2 id="fuzzing-harnesses-fuzzing-output-and-fuzzing-corpora">Fuzzing harnesses, fuzzing output and fuzzing corpora</h2>
 <p><a href="https://github.com/bitcoin/bitcoin/blob/master/src/test/fuzz/process_message.cpp"><code>process_message</code></a> is a fuzzing harness for the <a href="https://github.com/bitcoin/bitcoin/blob/master/src/net_processing.cpp"><code>ProcessMessage(...)</code> function (<code>net_processing</code>)</a>. The available fuzzing harnesses are found in <a href="https://github.com/bitcoin/bitcoin/tree/master/src/test/fuzz"><code>src/test/fuzz/</code></a>.</p>
 <p>The fuzzer will output <code>NEW</code> every time it has created a test input that covers new areas of the code under test. For more information on how to interpret the fuzzer output, see the <a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer documentation</a>.</p>
 <p>If you specify a corpus directory then any new coverage increasing inputs will be saved there:</p>
-<div class="sourceCode" id="cb111"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb111-1" title="1">$ <span class="fu">mkdir</span> -p process_message-seeded-from-thin-air/</a>
-<a class="sourceLine" id="cb111-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> process_message-seeded-from-thin-air/</a>
-<a class="sourceLine" id="cb111-3" title="3"><span class="ex">INFO</span>: Seed: 840522292</a>
-<a class="sourceLine" id="cb111-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55e121ef9ab8, 0x55e121f613a6),</a>
-<a class="sourceLine" id="cb111-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55e121f613a8,0x55e1225da288),</a>
-<a class="sourceLine" id="cb111-6" title="6"><span class="ex">INFO</span>:        0 files found in process_message-seeded-from-thin-air/</a>
-<a class="sourceLine" id="cb111-7" title="7"><span class="ex">INFO</span>: -max_len is not provided<span class="kw">;</span> <span class="ex">libFuzzer</span> will not generate inputs larger than 4096 bytes</a>
-<a class="sourceLine" id="cb111-8" title="8"><span class="ex">INFO</span>: A corpus is not provided, starting from an empty corpus</a>
-<a class="sourceLine" id="cb111-9" title="9"><span class="co">#2      INITED cov: 94 ft: 95 corp: 1/1b exec/s: 0 rss: 150Mb</span></a>
-<a class="sourceLine" id="cb111-10" title="10"><span class="co">#3      NEW    cov: 95 ft: 96 corp: 2/3b lim: 4 exec/s: 0 rss: 150Mb L: 2/2 MS: 1 InsertByte-</span></a>
-<a class="sourceLine" id="cb111-11" title="11"><span class="co">#4      NEW    cov: 96 ft: 98 corp: 3/7b lim: 4 exec/s: 0 rss: 150Mb L: 4/4 MS: 1 CrossOver-</span></a>
-<a class="sourceLine" id="cb111-12" title="12"><span class="co">#21     NEW    cov: 96 ft: 100 corp: 4/11b lim: 4 exec/s: 0 rss: 150Mb L: 4/4 MS: 2 ChangeBit-CrossOver-</span></a>
-<a class="sourceLine" id="cb111-13" title="13"><span class="co">#324    NEW    cov: 101 ft: 105 corp: 5/12b lim: 6 exec/s: 0 rss: 150Mb L: 6/6 MS: 5 CrossOver-ChangeBit-CopyPart-ChangeBit-ChangeBinInt-</span></a>
-<a class="sourceLine" id="cb111-14" title="14"><span class="co">#1239   REDUCE cov: 102 ft: 106 corp: 6/24b lim: 14 exec/s: 0 rss: 150Mb L: 13/13 MS: 5 ChangeBit-CrossOver-EraseBytes-ChangeBit-InsertRepeatedBytes-</span></a>
-<a class="sourceLine" id="cb111-15" title="15"><span class="co">#1272   REDUCE cov: 102 ft: 106 corp: 6/23b lim: 14 exec/s: 0 rss: 150Mb L: 12/12 MS: 3 ChangeBinInt-ChangeBit-EraseBytes-</span></a>
-<a class="sourceLine" id="cb111-16" title="16">        <span class="ex">NEW_FUNC</span>[1/677]: 0x55e11f456690 in std::_Function_base::~_Function_base() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/std_function.h:<span class="ex">255</span></a>
-<a class="sourceLine" id="cb111-17" title="17">        <span class="ex">NEW_FUNC</span>[2/677]: 0x55e11f465800 in CDataStream::CDataStream(std::vector<span class="op">&lt;</span>unsigned char, std::allocator<span class="op">&lt;</span>unsigned char<span class="op">&gt;</span> <span class="op">&gt;</span> const<span class="kw">&amp;</span>, <span class="ex">int</span>, int) <span class="ex">src/.</span>/streams.h:<span class="ex">248</span></a>
-<a class="sourceLine" id="cb111-18" title="18"><span class="co">#2125   REDUCE cov: 4820 ft: 4867 corp: 7/29b lim: 21 exec/s: 0 rss: 155Mb L: 6/12 MS: 2 CopyPart-CMP- DE: &quot;block&quot;-</span></a>
-<a class="sourceLine" id="cb111-19" title="19">        <span class="ex">NEW_FUNC</span>[1/9]: 0x55e11f64d790 in std::_Rb_tree<span class="op">&lt;</span>uint256, std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::_Select1st<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::less<span class="op">&lt;</span>uint256<span class="op">&gt;</span>, std::allocator<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>::~_Rb_tree() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_tree.h:<span class="ex">972</span></a>
-<a class="sourceLine" id="cb111-20" title="20">        <span class="ex">NEW_FUNC</span>[2/9]: 0x55e11f64d870 in std::_Rb_tree<span class="op">&lt;</span>uint256, std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::_Select1st<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::less<span class="op">&lt;</span>uint256<span class="op">&gt;</span>, std::allocator<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>::_M_erase(std::_Rb_tree_node<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>*) <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_tree.h:<span class="ex">1875</span></a>
-<a class="sourceLine" id="cb111-21" title="21"><span class="co">#2228   NEW    cov: 4898 ft: 4971 corp: 8/35b lim: 21 exec/s: 0 rss: 156Mb L: 6/12 MS: 3 EraseBytes-CopyPart-PersAutoDict- DE: &quot;block&quot;-</span></a>
-<a class="sourceLine" id="cb111-22" title="22">        <span class="ex">NEW_FUNC</span>[1/5]: 0x55e11f46df70 in std::enable_if<span class="op">&lt;</span>__and_<span class="op">&lt;</span>std::allocator_traits<span class="op">&lt;</span>zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span> <span class="op">&gt;</span>::__construct_helper<span class="op">&lt;</span>char, unsigned char const<span class="op">&amp;&gt;</span>::type<span class="op">&gt;</span>::value, void<span class="op">&gt;</span>::type std::allocator_traits<span class="op">&lt;</span>zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span> <span class="op">&gt;</span>::_S_construct<span class="op">&lt;</span>char, unsigned char const<span class="op">&amp;&gt;</span>(zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span><span class="kw">&amp;</span>, <span class="ex">char*</span>, unsigned char const<span class="kw">&amp;</span>) <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/alloc_traits.h:<span class="ex">243</span></a>
-<a class="sourceLine" id="cb111-23" title="23">        <span class="ex">NEW_FUNC</span>[2/5]: 0x55e11f477390 in std::vector<span class="op">&lt;</span>unsigned char, std::allocator<span class="op">&lt;</span>unsigned char<span class="op">&gt;</span> <span class="op">&gt;</span>::data() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_vector.h:<span class="ex">1056</span></a>
-<a class="sourceLine" id="cb111-24" title="24"><span class="co">#2456   NEW    cov: 4933 ft: 5042 corp: 9/55b lim: 21 exec/s: 0 rss: 160Mb L: 20/20 MS: 3 ChangeByte-InsertRepeatedBytes-PersAutoDict- DE: &quot;block&quot;-</span></a>
-<a class="sourceLine" id="cb111-25" title="25"><span class="co">#2467   NEW    cov: 4933 ft: 5043 corp: 10/76b lim: 21 exec/s: 0 rss: 161Mb L: 21/21 MS: 1 InsertByte-</span></a>
-<a class="sourceLine" id="cb111-26" title="26"><span class="co">#4215   NEW    cov: 4941 ft: 5129 corp: 17/205b lim: 29 exec/s: 4215 rss: 350Mb L: 29/29 MS: 5 InsertByte-ChangeBit-CopyPart-InsertRepeatedBytes-CrossOver-</span></a>
-<a class="sourceLine" id="cb111-27" title="27"><span class="co">#4567   REDUCE cov: 4941 ft: 5129 corp: 17/204b lim: 29 exec/s: 4567 rss: 404Mb L: 24/29 MS: 2 ChangeByte-EraseBytes-</span></a>
-<a class="sourceLine" id="cb111-28" title="28"><span class="co">#6642   NEW    cov: 4941 ft: 5138 corp: 18/244b lim: 43 exec/s: 2214 rss: 450Mb L: 43/43 MS: 3 CopyPart-CMP-CrossOver- DE: &quot;verack&quot;-</span></a>
-<a class="sourceLine" id="cb111-29" title="29"><span class="co"># abort fuzzing using ctrl-c</span></a>
-<a class="sourceLine" id="cb111-30" title="30">$ <span class="fu">ls</span> process_message-seeded-from-thin-air/</a>
-<a class="sourceLine" id="cb111-31" title="31"><span class="ex">349ac589fc66a09abc0b72bb4ae445a7a19e2cd8</span> 4df479f1f421f2ea64b383cd4919a272604087a7</a>
-<a class="sourceLine" id="cb111-32" title="32"><span class="ex">a640312c98dcc55d6744730c33e41c5168c55f09</span> b135de16e4709558c0797c15f86046d31c5d86d7</a>
-<a class="sourceLine" id="cb111-33" title="33"><span class="ex">c000f7b41b05139de8b63f4cbf7d1ad4c6e2aa7f</span> fc52cc00ec1eb1c08470e69f809ae4993fa70082</a>
-<a class="sourceLine" id="cb111-34" title="34">$ <span class="fu">cat</span> --show-nonprinting process_message-seeded-from-thin-air/349ac589fc66a09abc0b72bb4ae445a7a19e2cd8</a>
-<a class="sourceLine" id="cb111-35" title="35"><span class="ex">block</span>^@M-^?M-^?M-^?M-^?M-^?nM-^?M-^?</a></code></pre></div>
+<div class="sourceCode" id="cb114"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb114-1" title="1">$ <span class="fu">mkdir</span> -p process_message-seeded-from-thin-air/</a>
+<a class="sourceLine" id="cb114-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> process_message-seeded-from-thin-air/</a>
+<a class="sourceLine" id="cb114-3" title="3"><span class="ex">INFO</span>: Seed: 840522292</a>
+<a class="sourceLine" id="cb114-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55e121ef9ab8, 0x55e121f613a6),</a>
+<a class="sourceLine" id="cb114-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55e121f613a8,0x55e1225da288),</a>
+<a class="sourceLine" id="cb114-6" title="6"><span class="ex">INFO</span>:        0 files found in process_message-seeded-from-thin-air/</a>
+<a class="sourceLine" id="cb114-7" title="7"><span class="ex">INFO</span>: -max_len is not provided<span class="kw">;</span> <span class="ex">libFuzzer</span> will not generate inputs larger than 4096 bytes</a>
+<a class="sourceLine" id="cb114-8" title="8"><span class="ex">INFO</span>: A corpus is not provided, starting from an empty corpus</a>
+<a class="sourceLine" id="cb114-9" title="9"><span class="co">#2      INITED cov: 94 ft: 95 corp: 1/1b exec/s: 0 rss: 150Mb</span></a>
+<a class="sourceLine" id="cb114-10" title="10"><span class="co">#3      NEW    cov: 95 ft: 96 corp: 2/3b lim: 4 exec/s: 0 rss: 150Mb L: 2/2 MS: 1 InsertByte-</span></a>
+<a class="sourceLine" id="cb114-11" title="11"><span class="co">#4      NEW    cov: 96 ft: 98 corp: 3/7b lim: 4 exec/s: 0 rss: 150Mb L: 4/4 MS: 1 CrossOver-</span></a>
+<a class="sourceLine" id="cb114-12" title="12"><span class="co">#21     NEW    cov: 96 ft: 100 corp: 4/11b lim: 4 exec/s: 0 rss: 150Mb L: 4/4 MS: 2 ChangeBit-CrossOver-</span></a>
+<a class="sourceLine" id="cb114-13" title="13"><span class="co">#324    NEW    cov: 101 ft: 105 corp: 5/12b lim: 6 exec/s: 0 rss: 150Mb L: 6/6 MS: 5 CrossOver-ChangeBit-CopyPart-ChangeBit-ChangeBinInt-</span></a>
+<a class="sourceLine" id="cb114-14" title="14"><span class="co">#1239   REDUCE cov: 102 ft: 106 corp: 6/24b lim: 14 exec/s: 0 rss: 150Mb L: 13/13 MS: 5 ChangeBit-CrossOver-EraseBytes-ChangeBit-InsertRepeatedBytes-</span></a>
+<a class="sourceLine" id="cb114-15" title="15"><span class="co">#1272   REDUCE cov: 102 ft: 106 corp: 6/23b lim: 14 exec/s: 0 rss: 150Mb L: 12/12 MS: 3 ChangeBinInt-ChangeBit-EraseBytes-</span></a>
+<a class="sourceLine" id="cb114-16" title="16">        <span class="ex">NEW_FUNC</span>[1/677]: 0x55e11f456690 in std::_Function_base::~_Function_base() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/std_function.h:<span class="ex">255</span></a>
+<a class="sourceLine" id="cb114-17" title="17">        <span class="ex">NEW_FUNC</span>[2/677]: 0x55e11f465800 in CDataStream::CDataStream(std::vector<span class="op">&lt;</span>unsigned char, std::allocator<span class="op">&lt;</span>unsigned char<span class="op">&gt;</span> <span class="op">&gt;</span> const<span class="kw">&amp;</span>, <span class="ex">int</span>, int) <span class="ex">src/.</span>/streams.h:<span class="ex">248</span></a>
+<a class="sourceLine" id="cb114-18" title="18"><span class="co">#2125   REDUCE cov: 4820 ft: 4867 corp: 7/29b lim: 21 exec/s: 0 rss: 155Mb L: 6/12 MS: 2 CopyPart-CMP- DE: &quot;block&quot;-</span></a>
+<a class="sourceLine" id="cb114-19" title="19">        <span class="ex">NEW_FUNC</span>[1/9]: 0x55e11f64d790 in std::_Rb_tree<span class="op">&lt;</span>uint256, std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::_Select1st<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::less<span class="op">&lt;</span>uint256<span class="op">&gt;</span>, std::allocator<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>::~_Rb_tree() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_tree.h:<span class="ex">972</span></a>
+<a class="sourceLine" id="cb114-20" title="20">        <span class="ex">NEW_FUNC</span>[2/9]: 0x55e11f64d870 in std::_Rb_tree<span class="op">&lt;</span>uint256, std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::_Select1st<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>, std::less<span class="op">&lt;</span>uint256<span class="op">&gt;</span>, std::allocator<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>::_M_erase(std::_Rb_tree_node<span class="op">&lt;</span>std::pair<span class="op">&lt;</span>uint256 const, std::chrono::duration<span class="op">&lt;</span>long, std::ratio<span class="op">&lt;</span>1l, 1000000l<span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span>*) <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_tree.h:<span class="ex">1875</span></a>
+<a class="sourceLine" id="cb114-21" title="21"><span class="co">#2228   NEW    cov: 4898 ft: 4971 corp: 8/35b lim: 21 exec/s: 0 rss: 156Mb L: 6/12 MS: 3 EraseBytes-CopyPart-PersAutoDict- DE: &quot;block&quot;-</span></a>
+<a class="sourceLine" id="cb114-22" title="22">        <span class="ex">NEW_FUNC</span>[1/5]: 0x55e11f46df70 in std::enable_if<span class="op">&lt;</span>__and_<span class="op">&lt;</span>std::allocator_traits<span class="op">&lt;</span>zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span> <span class="op">&gt;</span>::__construct_helper<span class="op">&lt;</span>char, unsigned char const<span class="op">&amp;&gt;</span>::type<span class="op">&gt;</span>::value, void<span class="op">&gt;</span>::type std::allocator_traits<span class="op">&lt;</span>zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span> <span class="op">&gt;</span>::_S_construct<span class="op">&lt;</span>char, unsigned char const<span class="op">&amp;&gt;</span>(zero_after_free_allocator<span class="op">&lt;</span>char<span class="op">&gt;</span><span class="kw">&amp;</span>, <span class="ex">char*</span>, unsigned char const<span class="kw">&amp;</span>) <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/alloc_traits.h:<span class="ex">243</span></a>
+<a class="sourceLine" id="cb114-23" title="23">        <span class="ex">NEW_FUNC</span>[2/5]: 0x55e11f477390 in std::vector<span class="op">&lt;</span>unsigned char, std::allocator<span class="op">&lt;</span>unsigned char<span class="op">&gt;</span> <span class="op">&gt;</span>::data() <span class="ex">/usr/lib/gcc/x86_64-linux-gnu/8/../../../../include/c++/8/bits</span>/stl_vector.h:<span class="ex">1056</span></a>
+<a class="sourceLine" id="cb114-24" title="24"><span class="co">#2456   NEW    cov: 4933 ft: 5042 corp: 9/55b lim: 21 exec/s: 0 rss: 160Mb L: 20/20 MS: 3 ChangeByte-InsertRepeatedBytes-PersAutoDict- DE: &quot;block&quot;-</span></a>
+<a class="sourceLine" id="cb114-25" title="25"><span class="co">#2467   NEW    cov: 4933 ft: 5043 corp: 10/76b lim: 21 exec/s: 0 rss: 161Mb L: 21/21 MS: 1 InsertByte-</span></a>
+<a class="sourceLine" id="cb114-26" title="26"><span class="co">#4215   NEW    cov: 4941 ft: 5129 corp: 17/205b lim: 29 exec/s: 4215 rss: 350Mb L: 29/29 MS: 5 InsertByte-ChangeBit-CopyPart-InsertRepeatedBytes-CrossOver-</span></a>
+<a class="sourceLine" id="cb114-27" title="27"><span class="co">#4567   REDUCE cov: 4941 ft: 5129 corp: 17/204b lim: 29 exec/s: 4567 rss: 404Mb L: 24/29 MS: 2 ChangeByte-EraseBytes-</span></a>
+<a class="sourceLine" id="cb114-28" title="28"><span class="co">#6642   NEW    cov: 4941 ft: 5138 corp: 18/244b lim: 43 exec/s: 2214 rss: 450Mb L: 43/43 MS: 3 CopyPart-CMP-CrossOver- DE: &quot;verack&quot;-</span></a>
+<a class="sourceLine" id="cb114-29" title="29"><span class="co"># abort fuzzing using ctrl-c</span></a>
+<a class="sourceLine" id="cb114-30" title="30">$ <span class="fu">ls</span> process_message-seeded-from-thin-air/</a>
+<a class="sourceLine" id="cb114-31" title="31"><span class="ex">349ac589fc66a09abc0b72bb4ae445a7a19e2cd8</span> 4df479f1f421f2ea64b383cd4919a272604087a7</a>
+<a class="sourceLine" id="cb114-32" title="32"><span class="ex">a640312c98dcc55d6744730c33e41c5168c55f09</span> b135de16e4709558c0797c15f86046d31c5d86d7</a>
+<a class="sourceLine" id="cb114-33" title="33"><span class="ex">c000f7b41b05139de8b63f4cbf7d1ad4c6e2aa7f</span> fc52cc00ec1eb1c08470e69f809ae4993fa70082</a>
+<a class="sourceLine" id="cb114-34" title="34">$ <span class="fu">cat</span> --show-nonprinting process_message-seeded-from-thin-air/349ac589fc66a09abc0b72bb4ae445a7a19e2cd8</a>
+<a class="sourceLine" id="cb114-35" title="35"><span class="ex">block</span>^@M-^?M-^?M-^?M-^?M-^?nM-^?M-^?</a></code></pre></div>
 <p>In this case the fuzzer managed to create a <code>block</code> message which when passed to <code>ProcessMessage(...)</code> increased coverage.</p>
 <p>The project's collection of seed corpora is found in the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> repo.</p>
 <p>To fuzz <code>process_message</code> using the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> seed corpus:</p>
-<div class="sourceCode" id="cb112"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb112-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin-core/qa-assets</a>
-<a class="sourceLine" id="cb112-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> qa-assets/fuzz_seed_corpus/process_message/</a>
-<a class="sourceLine" id="cb112-3" title="3"><span class="ex">INFO</span>: Seed: 1346407872</a>
-<a class="sourceLine" id="cb112-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),</a>
-<a class="sourceLine" id="cb112-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55d8a906c3a8,0x55d8a96e5288),</a>
-<a class="sourceLine" id="cb112-6" title="6"><span class="ex">INFO</span>:      991 files found in qa-assets/fuzz_seed_corpus/process_message/</a>
-<a class="sourceLine" id="cb112-7" title="7"><span class="ex">INFO</span>: -max_len is not provided<span class="kw">;</span> <span class="ex">libFuzzer</span> will not generate inputs larger than 4096 bytes</a>
-<a class="sourceLine" id="cb112-8" title="8"><span class="ex">INFO</span>: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb</a>
-<a class="sourceLine" id="cb112-9" title="9"><span class="co">#993    INITED cov: 7063 ft: 8236 corp: 25/3821b exec/s: 0 rss: 181Mb</span></a>
-<a class="sourceLine" id="cb112-10" title="10">…</a></code></pre></div>
+<div class="sourceCode" id="cb115"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb115-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin-core/qa-assets</a>
+<a class="sourceLine" id="cb115-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> qa-assets/fuzz_seed_corpus/process_message/</a>
+<a class="sourceLine" id="cb115-3" title="3"><span class="ex">INFO</span>: Seed: 1346407872</a>
+<a class="sourceLine" id="cb115-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),</a>
+<a class="sourceLine" id="cb115-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55d8a906c3a8,0x55d8a96e5288),</a>
+<a class="sourceLine" id="cb115-6" title="6"><span class="ex">INFO</span>:      991 files found in qa-assets/fuzz_seed_corpus/process_message/</a>
+<a class="sourceLine" id="cb115-7" title="7"><span class="ex">INFO</span>: -max_len is not provided<span class="kw">;</span> <span class="ex">libFuzzer</span> will not generate inputs larger than 4096 bytes</a>
+<a class="sourceLine" id="cb115-8" title="8"><span class="ex">INFO</span>: seed corpus: files: 991 min: 1b max: 1858b total: 288291b rss: 150Mb</a>
+<a class="sourceLine" id="cb115-9" title="9"><span class="co">#993    INITED cov: 7063 ft: 8236 corp: 25/3821b exec/s: 0 rss: 181Mb</span></a>
+<a class="sourceLine" id="cb115-10" title="10">…</a></code></pre></div>
 <p>If you find coverage increasing inputs when fuzzing you are highly encouraged to submit them for inclusion in the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> repo.</p>
 <p>Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.</p>
 <h2 id="macos-hints-for-libfuzzer">macOS hints for libFuzzer</h2>
@@ -2269,43 +2325,43 @@ nbproject/
 <p>Should you run into problems with the address sanitizer, it is possible you may need to run <code>./configure</code> with <code>--disable-asm</code> to avoid errors with certain assembly code from Bitcoin Core's code. See <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/developer-notes.html#sanitizers">developer notes on sanitizers</a> for more information.</p>
 <p>You may also need to take care of giving the correct path for <code>clang</code> and <code>clang++</code>, like <code>CC=/path/to/clang CXX=/path/to/clang++</code> if the non-systems <code>clang</code> does not come first in your path.</p>
 <p>Full configure that was tested on macOS Catalina with <code>brew</code> installed <code>llvm</code>:</p>
-<div class="sourceCode" id="cb113"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb113-1" title="1"><span class="ex">./configure</span> --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm</a></code></pre></div>
+<div class="sourceCode" id="cb116"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb116-1" title="1"><span class="ex">./configure</span> --enable-fuzz --with-sanitizers=fuzzer,address,undefined CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ --disable-asm</a></code></pre></div>
 <p>Read the <a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer documentation</a> for more information. This <a href="https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.html">libFuzzer tutorial</a> might also be of interest.</p>
 <h1 id="fuzzing-bitcoin-core-using-american-fuzzy-lop-afl-fuzz">Fuzzing Bitcoin Core using american fuzzy lop (<code>afl-fuzz</code>)</h1>
 <h2 id="quickstart-guide-1">Quickstart guide</h2>
 <p>To quickly get started fuzzing Bitcoin Core using <a href="https://github.com/google/afl"><code>afl-fuzz</code></a>:</p>
-<div class="sourceCode" id="cb114"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb114-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
-<a class="sourceLine" id="cb114-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
-<a class="sourceLine" id="cb114-3" title="3">$ <span class="fu">git</span> clone https://github.com/google/afl</a>
-<a class="sourceLine" id="cb114-4" title="4">$ <span class="fu">make</span> -C afl/</a>
-<a class="sourceLine" id="cb114-5" title="5">$ <span class="fu">make</span> -C afl/llvm_mode/</a>
-<a class="sourceLine" id="cb114-6" title="6">$ <span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb114-7" title="7"><span class="co"># It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz</span></a>
-<a class="sourceLine" id="cb114-8" title="8"><span class="co"># may require more memory via the -m flag.</span></a>
-<a class="sourceLine" id="cb114-9" title="9">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast++ <span class="ex">./configure</span> --enable-fuzz</a>
-<a class="sourceLine" id="cb114-10" title="10">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb114-11" title="11"><span class="co"># For macOS you may need to ignore x86 compilation checks when running &quot;make&quot;. If so,</span></a>
-<a class="sourceLine" id="cb114-12" title="12"><span class="co"># try compiling using: AFL_NO_X86=1 make</span></a>
-<a class="sourceLine" id="cb114-13" title="13">$ <span class="fu">mkdir</span> -p inputs/ outputs/</a>
-<a class="sourceLine" id="cb114-14" title="14">$ <span class="bu">echo</span> A <span class="op">&gt;</span> inputs/thin-air-input</a>
-<a class="sourceLine" id="cb114-15" title="15">$ <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/bech32</a>
-<a class="sourceLine" id="cb114-16" title="16"><span class="co"># You may have to change a few kernel parameters to test optimally - afl-fuzz</span></a>
-<a class="sourceLine" id="cb114-17" title="17"><span class="co"># will print an error and suggestion if so.</span></a></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb117-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
+<a class="sourceLine" id="cb117-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
+<a class="sourceLine" id="cb117-3" title="3">$ <span class="fu">git</span> clone https://github.com/google/afl</a>
+<a class="sourceLine" id="cb117-4" title="4">$ <span class="fu">make</span> -C afl/</a>
+<a class="sourceLine" id="cb117-5" title="5">$ <span class="fu">make</span> -C afl/llvm_mode/</a>
+<a class="sourceLine" id="cb117-6" title="6">$ <span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb117-7" title="7"><span class="co"># It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz</span></a>
+<a class="sourceLine" id="cb117-8" title="8"><span class="co"># may require more memory via the -m flag.</span></a>
+<a class="sourceLine" id="cb117-9" title="9">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/afl/afl-clang-fast++ <span class="ex">./configure</span> --enable-fuzz</a>
+<a class="sourceLine" id="cb117-10" title="10">$ <span class="fu">make</span></a>
+<a class="sourceLine" id="cb117-11" title="11"><span class="co"># For macOS you may need to ignore x86 compilation checks when running &quot;make&quot;. If so,</span></a>
+<a class="sourceLine" id="cb117-12" title="12"><span class="co"># try compiling using: AFL_NO_X86=1 make</span></a>
+<a class="sourceLine" id="cb117-13" title="13">$ <span class="fu">mkdir</span> -p inputs/ outputs/</a>
+<a class="sourceLine" id="cb117-14" title="14">$ <span class="bu">echo</span> A <span class="op">&gt;</span> inputs/thin-air-input</a>
+<a class="sourceLine" id="cb117-15" title="15">$ <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/bech32</a>
+<a class="sourceLine" id="cb117-16" title="16"><span class="co"># You may have to change a few kernel parameters to test optimally - afl-fuzz</span></a>
+<a class="sourceLine" id="cb117-17" title="17"><span class="co"># will print an error and suggestion if so.</span></a></code></pre></div>
 <p>Read the <a href="https://github.com/google/afl"><code>afl-fuzz</code> documentation</a> for more information.</p>
 <h1 id="fuzzing-bitcoin-core-using-honggfuzz">Fuzzing Bitcoin Core using Honggfuzz</h1>
 <h2 id="quickstart-guide-2">Quickstart guide</h2>
 <p>To quickly get started fuzzing Bitcoin Core using <a href="https://github.com/google/honggfuzz">Honggfuzz</a>:</p>
-<div class="sourceCode" id="cb115"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb115-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
-<a class="sourceLine" id="cb115-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
-<a class="sourceLine" id="cb115-3" title="3">$ <span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb115-4" title="4">$ <span class="fu">git</span> clone https://github.com/google/honggfuzz</a>
-<a class="sourceLine" id="cb115-5" title="5">$ <span class="bu">cd</span> honggfuzz/</a>
-<a class="sourceLine" id="cb115-6" title="6">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb115-7" title="7">$ <span class="bu">cd</span> ..</a>
-<a class="sourceLine" id="cb115-8" title="8">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang++ <span class="ex">./configure</span> --enable-fuzz --with-sanitizers=address,undefined</a>
-<a class="sourceLine" id="cb115-9" title="9">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb115-10" title="10">$ <span class="fu">mkdir</span> -p inputs/</a>
-<a class="sourceLine" id="cb115-11" title="11">$ <span class="ex">honggfuzz/honggfuzz</span> -i inputs/ -- src/test/fuzz/process_message</a></code></pre></div>
+<div class="sourceCode" id="cb118"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb118-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin/bitcoin</a>
+<a class="sourceLine" id="cb118-2" title="2">$ <span class="bu">cd</span> bitcoin/</a>
+<a class="sourceLine" id="cb118-3" title="3">$ <span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb118-4" title="4">$ <span class="fu">git</span> clone https://github.com/google/honggfuzz</a>
+<a class="sourceLine" id="cb118-5" title="5">$ <span class="bu">cd</span> honggfuzz/</a>
+<a class="sourceLine" id="cb118-6" title="6">$ <span class="fu">make</span></a>
+<a class="sourceLine" id="cb118-7" title="7">$ <span class="bu">cd</span> ..</a>
+<a class="sourceLine" id="cb118-8" title="8">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang++ <span class="ex">./configure</span> --enable-fuzz --with-sanitizers=address,undefined</a>
+<a class="sourceLine" id="cb118-9" title="9">$ <span class="fu">make</span></a>
+<a class="sourceLine" id="cb118-10" title="10">$ <span class="fu">mkdir</span> -p inputs/</a>
+<a class="sourceLine" id="cb118-11" title="11">$ <span class="ex">honggfuzz/honggfuzz</span> -i inputs/ -- src/test/fuzz/process_message</a></code></pre></div>
 <h1 id="read-the-honggfuzz-documentation-for-more-information-gitian-building">Read the <a href="https://github.com/google/honggfuzz/blob/master/docs/USAGE.html">Honggfuzz documentation</a> for more information. Gitian building</h1>
 <h1 id="this-file-was-moved-to-the-bitcoin-core-documentation-repository-at-httpsgithubcombitcoin-coredocs-sample-init-scripts-and-service-configuration-for-bitcoind">This file was moved to <a href="https://github.com/bitcoin-core/docs/blob/master/gitian-building.html">the Bitcoin Core documentation repository</a> at <a href="https://github.com/bitcoin-core/docs">https://github.com/bitcoin-core/docs</a>. Sample init scripts and service configuration for bitcoind</h1>
 <p>Sample scripts and configuration files for syst.html, Upstart and OpenRC can be found in the contrib/init folder.</p>
@@ -2425,33 +2481,33 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <p>You <em>must not</em> set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).</p>
 <h3 id="disable-features-with-configure">Disable features with <code>./configure</code></h3>
 <p>After running <code>./autogen.sh</code>, which generates the <code>./configure</code> file, use <code>./configure --help</code> to identify features that you can disable to save on compilation time. A few common flags:</p>
-<div class="sourceCode" id="cb119"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb119-1" title="1"><span class="ex">--without-miniupnpc</span></a>
-<a class="sourceLine" id="cb119-2" title="2"><span class="ex">--disable-bench</span></a>
-<a class="sourceLine" id="cb119-3" title="3"><span class="ex">--disable-wallet</span></a>
-<a class="sourceLine" id="cb119-4" title="4"><span class="ex">--without-gui</span></a></code></pre></div>
+<div class="sourceCode" id="cb122"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb122-1" title="1"><span class="ex">--without-miniupnpc</span></a>
+<a class="sourceLine" id="cb122-2" title="2"><span class="ex">--disable-bench</span></a>
+<a class="sourceLine" id="cb122-3" title="3"><span class="ex">--disable-wallet</span></a>
+<a class="sourceLine" id="cb122-4" title="4"><span class="ex">--without-gui</span></a></code></pre></div>
 <p>If you do need the wallet enabled, it is common for devs to add <code>--with-incompatible-bdb</code>. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.</p>
 <h3 id="make-use-of-your-threads-with-make--j">Make use of your threads with <code>make -j</code></h3>
 <p>If you have multiple threads on your machine, you can tell <code>make</code> to utilize all of them with:</p>
-<div class="sourceCode" id="cb120"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb120-1" title="1"><span class="fu">make</span> -j<span class="st">&quot;</span><span class="va">$(($(</span><span class="ex">nproc</span><span class="va">)</span>+1<span class="va">))</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb123"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb123-1" title="1"><span class="fu">make</span> -j<span class="st">&quot;</span><span class="va">$(($(</span><span class="ex">nproc</span><span class="va">)</span>+1<span class="va">))</span><span class="st">&quot;</span></a></code></pre></div>
 <h3 id="only-build-what-you-need">Only build what you need</h3>
 <p>When rebuilding during development, note that running <code>make</code>, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).</p>
 <p>Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:</p>
-<div class="sourceCode" id="cb121"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb121-1" title="1"><span class="fu">make</span> src/bitcoind src/bitcoin-cli</a>
-<a class="sourceLine" id="cb121-2" title="2"><span class="fu">make</span> src/qt/bitcoin-qt</a>
-<a class="sourceLine" id="cb121-3" title="3"><span class="fu">make</span> -C src bitcoin_bench</a></code></pre></div>
+<div class="sourceCode" id="cb124"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb124-1" title="1"><span class="fu">make</span> src/bitcoind src/bitcoin-cli</a>
+<a class="sourceLine" id="cb124-2" title="2"><span class="fu">make</span> src/qt/bitcoin-qt</a>
+<a class="sourceLine" id="cb124-3" title="3"><span class="fu">make</span> -C src bitcoin_bench</a></code></pre></div>
 <p>(You can and should combine this with <code>-j</code>, as above, for a parallel build.)</p>
 <h3 id="multiple-working-directories-with-git-worktrees">Multiple working directories with <code>git worktrees</code></h3>
 <p>If you work with multiple branches or multiple copies of the repository, you should try <code>git worktrees</code>.</p>
 <p>To create a new branch that lives under a new working directory without disrupting your current working directory (useful for creating pull requests):</p>
-<div class="sourceCode" id="cb122"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb122-1" title="1"><span class="fu">git</span> worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory based-on-my-crufty-old-commit-ish</a></code></pre></div>
+<div class="sourceCode" id="cb125"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb125-1" title="1"><span class="fu">git</span> worktree add -b my-shiny-new-branch ../living-at-my-new-working-directory based-on-my-crufty-old-commit-ish</a></code></pre></div>
 <p>To simply check out a commit-ish under a new working directory without disrupting your current working directory (useful for reviewing pull requests):</p>
-<div class="sourceCode" id="cb123"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb123-1" title="1"><span class="fu">git</span> worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish</a></code></pre></div>
+<div class="sourceCode" id="cb126"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb126-1" title="1"><span class="fu">git</span> worktree add --checkout ../where-my-checkout-commit-ish-will-live my-checkout-commit-ish</a></code></pre></div>
 <h3 id="interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base">Interactive "dummy rebases" for fixups and execs with <code>git merge-base</code></h3>
 <p>When rebasing, we often want to do a "dummy rebase," whereby we are not rebasing over an updated master but rather over the last common commit with master. This might be useful for rearranging commits, <code>rebase --autosquash</code>ing, or <code>rebase --exec</code>ing without introducing conflicts that arise from an updated master. In these situations, we can use <code>git merge-base</code> to identify the last common commit with master, and rebase off of that.</p>
 <p>To squash in <code>git commit --fixup</code> commits without rebasing over an updated master, we can do the following:</p>
-<div class="sourceCode" id="cb124"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb124-1" title="1"><span class="fu">git</span> rebase -i --autosquash <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb127"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb127-1" title="1"><span class="fu">git</span> rebase -i --autosquash <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
 <p>To execute <code>make check</code> on every commit since last diverged from master, but without rebasing over an updated master, we can do the following:</p>
-<div class="sourceCode" id="cb125"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb125-1" title="1"><span class="fu">git</span> rebase -i --exec <span class="st">&quot;make check&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb128"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb128-1" title="1"><span class="fu">git</span> rebase -i --exec <span class="st">&quot;make check&quot;</span> <span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> merge-base master HEAD<span class="va">)</span><span class="st">&quot;</span></a></code></pre></div>
 <hr />
 <p>This synergizes well with <a href="#cache-compilations-with-ccache"><code>ccache</code></a> as objects resulting from unchanged code will most likely hit the cache and won't need to be recompiled.</p>
 <p>You can also set up <a href="#reference-prs-easily-with-refspecs">upstream refspecs</a> to refer to pull requests easier in the above <code>git worktree</code> commands.</p>
@@ -2463,19 +2519,19 @@ base_dir = /home/yourname  # or wherever you keep your source files
 <h2 id="rebasingmerging-code">Rebasing/Merging code</h2>
 <h3 id="more-conflict-context-with-mergeconflictstyle-diff3">More conflict context with <code>merge.conflictstyle diff3</code></h3>
 <p>For resolving merge/rebase conflicts, it can be useful to enable diff3 style using <code>git config merge.conflictstyle diff3</code>. Instead of</p>
-<div class="sourceCode" id="cb126"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb126-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
-<a class="sourceLine" id="cb126-2" title="2">yours</a>
-<a class="sourceLine" id="cb126-3" title="3">===</a>
-<a class="sourceLine" id="cb126-4" title="4">theirs</a>
-<a class="sourceLine" id="cb126-5" title="5"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb129"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb129-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
+<a class="sourceLine" id="cb129-2" title="2">yours</a>
+<a class="sourceLine" id="cb129-3" title="3">===</a>
+<a class="sourceLine" id="cb129-4" title="4">theirs</a>
+<a class="sourceLine" id="cb129-5" title="5"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
 <p>you will see</p>
-<div class="sourceCode" id="cb127"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb127-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
-<a class="sourceLine" id="cb127-2" title="2">yours</a>
-<a class="sourceLine" id="cb127-3" title="3">|||</a>
-<a class="sourceLine" id="cb127-4" title="4">original</a>
-<a class="sourceLine" id="cb127-5" title="5">===</a>
-<a class="sourceLine" id="cb127-6" title="6">theirs</a>
-<a class="sourceLine" id="cb127-7" title="7"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb130"><pre class="sourceCode diff"><code class="sourceCode diff"><a class="sourceLine" id="cb130-1" title="1"><span class="st">&lt;&lt;&lt;</span></a>
+<a class="sourceLine" id="cb130-2" title="2">yours</a>
+<a class="sourceLine" id="cb130-3" title="3">|||</a>
+<a class="sourceLine" id="cb130-4" title="4">original</a>
+<a class="sourceLine" id="cb130-5" title="5">===</a>
+<a class="sourceLine" id="cb130-6" title="6">theirs</a>
+<a class="sourceLine" id="cb130-7" title="7"><span class="va">&gt;&gt;&gt;</span></a></code></pre></div>
 <p>This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between <em>original</em> and <em>theirs</em>, and mechanically apply that to <em>yours</em> (or the other way around).</p>
 <h2 id="reviewing-code">Reviewing code</h2>
 <h3 id="reduce-mental-load-with-git-diff-options">Reduce mental load with <code>git diff</code> options</h3>
@@ -2499,7 +2555,7 @@ base_dir = /home/yourname  # or wherever you keep your source files
        P1--P2--N3--N4--N5   &lt;-- new-head (with P3 slightly modified)
 </code></pre>
 <p>You can do:</p>
-<div class="sourceCode" id="cb130"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb130-1" title="1"><span class="fu">git</span> range-diff master previously-reviewed-head new-head</a></code></pre></div>
+<div class="sourceCode" id="cb133"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb133-1" title="1"><span class="fu">git</span> range-diff master previously-reviewed-head new-head</a></code></pre></div>
 <p>Note that <code>git range-diff</code> also work for rebases:</p>
 <pre><code>       P1--P2--P3--P4--P5   &lt;-- previously-reviewed-head
       /
@@ -2600,9 +2656,9 @@ PREV=P5 N=4 &amp;&amp; git range-diff `git merge-base --all HEAD $PREV`...$PREV 
 </ul>
 <h2 id="linux-specific">Linux specific</h2>
 <p>By default, since glibc <code>2.10</code>, the C library will create up to two heap arenas per core. This is known to cause excessive memory usage in some scenarios. To avoid this make a script that sets <code>MALLOC_ARENA_MAX</code> before starting bitcoind:</p>
-<div class="sourceCode" id="cb132"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb132-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb132-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
-<a class="sourceLine" id="cb132-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
+<div class="sourceCode" id="cb135"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb135-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb135-2" title="2"><span class="bu">export</span> <span class="va">MALLOC_ARENA_MAX=</span>1</a>
+<a class="sourceLine" id="cb135-3" title="3"><span class="ex">bitcoind</span></a></code></pre></div>
 <h1 id="the-behavior-was-introduced-to-increase-cpu-locality-of-allocated-memory-and-performance-with-concurrent-allocation-so-this-setting-could-in-theory-reduce-performance-however-in-bitcoin-core-very-little-parallel-allocation-happens-so-the-impact-is-expected-to-be-small-or-absent-reduce-traffic">The behavior was introduced to increase CPU locality of allocated memory and performance with concurrent allocation, so this setting could in theory reduce performance. However, in Bitcoin Core very little parallel allocation happens, so the impact is expected to be small or absent. Reduce Traffic</h1>
 <p>Some node operators need to deal with bandwidth caps imposed by their ISPs.</p>
 <p>By default, Bitcoin Core allows up to 125 connections to different peers, 10 of which are outbound. You can therefore, have at most 115 inbound connections. Of the 10 outbound peers, there can be 8 full-relay connections and 2 block-relay-only ones.</p>
@@ -2851,7 +2907,7 @@ popd
 <ul>
 <li>Create <code>SHA256SUMS.asc</code> for the builds, and GPG-sign it:</li>
 </ul>
-<div class="sourceCode" id="cb152"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb152-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
+<div class="sourceCode" id="cb155"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb155-1" title="1"><span class="ex">sha256sum</span> * <span class="op">&gt;</span> SHA256SUMS</a></code></pre></div>
 <p>The list of files should be:</p>
 <pre><code>bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
 bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
@@ -2875,7 +2931,7 @@ rm SHA256SUMS
 <li><p>Upload zips and installers, as well as <code>SHA256SUMS.asc</code> from last step, to the bitcoin.org server into <code>/var/www/bin/bitcoin-core-${VERSION}</code></p></li>
 <li><p>A <code>.torrent</code> will appear in the directory after a few minutes. Optionally help seed this torrent. To get the <code>magnet:</code> URI use:</p></li>
 </ul>
-<div class="sourceCode" id="cb155"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb155-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb158"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb158-1" title="1"><span class="ex">transmission-show</span> -m <span class="op">&lt;</span>torrent file<span class="op">&gt;</span></a></code></pre></div>
 <p>Insert the magnet URI into the announcement sent to mailing lists. This permits people without access to <code>bitcoin.org</code> to download the binary distribution. Also put it into the <code>optional_magnetlink:</code> slot in the YAML file for bitcoin.org (see below for bitcoin.org update instructions).</p>
 <ul>
 <li><p>Update bitcoin.org version</p>
@@ -3076,11 +3132,11 @@ HiddenServicePort 18333 127.0.0.1:18333
 <p>We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in <code>src/qt/locale/</code>. The translation source files must adhere to the following format: <code>bitcoin_xx_YY.ts or bitcoin_xx.ts</code></p>
 <p><code>src/qt/locale/bitcoin_en.ts</code> is treated in a special way. It is used as the source for all other translations. Whenever a string in the source code is changed, this file must be updated to reflect those changes. A custom script is used to extract strings from the non-Qt parts. This script makes use of <code>gettext</code>, so make sure that utility is installed (ie, <code>apt-get install gettext</code> on Ubuntu/Debian). Once this has been updated, <code>lupdate</code> (included in the Qt SDK) is used to update <code>bitcoin_en.ts</code>.</p>
 <p>To automatically regenerate the <code>bitcoin_en.ts</code> file, run the following commands:</p>
-<div class="sourceCode" id="cb164"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb164-1" title="1"><span class="bu">cd</span> src/</a>
-<a class="sourceLine" id="cb164-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb167-1" title="1"><span class="bu">cd</span> src/</a>
+<a class="sourceLine" id="cb167-2" title="2"><span class="fu">make</span> translate</a></code></pre></div>
 <p><code>contrib/bitcoin-qt.pro</code> takes care of generating <code>.qm</code> (binary compiled) files from <code>.ts</code> (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.</p>
 <p><strong>Example Qt translation</strong></p>
-<div class="sourceCode" id="cb165"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb165-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
+<div class="sourceCode" id="cb168"><pre class="sourceCode cpp"><code class="sourceCode cpp"><a class="sourceLine" id="cb168-1" title="1"><span class="ex">QToolBar</span> *toolbar = addToolBar(<span class="fu">tr</span>(<span class="st">&quot;Tabs toolbar&quot;</span>));</a></code></pre></div>
 <h3 id="creating-a-pull-request">Creating a pull-request</h3>
 <p>For general PRs, you shouldn’t include any updates to the translation source files. They will be updated periodically, primarily around pre-releases, allowing time for any new phrases to be translated before public releases. This is also important in avoiding translation related merge conflicts.</p>
 <p>When an updated source file is merged into the GitHub repo, Transifex will automatically detect it (although it can take several hours). Once processed, the new strings will show up as "Remaining" in the Transifex web interface and are ready for translators.</p>
@@ -3095,13 +3151,13 @@ git commit
 <p>The client is used to fetch updated translations. If you are having problems, or need more details, see <a href="https://docs.transifex.com/client/installing-the-client">https://docs.transifex.com/client/installing-the-client</a></p>
 <p><code>pip install transifex-client</code></p>
 <p>Setup your Transifex client config as follows. Please <em>ignore the token field</em>.</p>
-<div class="sourceCode" id="cb167"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb167-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
-<a class="sourceLine" id="cb167-2" title="2"></a>
-<a class="sourceLine" id="cb167-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
-<a class="sourceLine" id="cb167-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
-<a class="sourceLine" id="cb167-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
-<a class="sourceLine" id="cb167-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
-<a class="sourceLine" id="cb167-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
+<div class="sourceCode" id="cb170"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb170-1" title="1"><span class="dt">nano ~/.transifexrc</span></a>
+<a class="sourceLine" id="cb170-2" title="2"></a>
+<a class="sourceLine" id="cb170-3" title="3"><span class="kw">[https://www.transifex.com]</span></a>
+<a class="sourceLine" id="cb170-4" title="4"><span class="dt">hostname </span><span class="ot">=</span><span class="st"> https://www.transifex.com</span></a>
+<a class="sourceLine" id="cb170-5" title="5"><span class="dt">password </span><span class="ot">=</span><span class="st"> PASSWORD</span></a>
+<a class="sourceLine" id="cb170-6" title="6"><span class="dt">token </span><span class="ot">=</span></a>
+<a class="sourceLine" id="cb170-7" title="7"><span class="dt">username </span><span class="ot">=</span><span class="st"> USERNAME</span></a></code></pre></div>
 <p>The Transifex Bitcoin project config file is included as part of the repo. It can be found at <code>.tx/config</code>, however you shouldn’t need to change anything.</p>
 <h3 id="synchronising-translations">Synchronising translations</h3>
 <p>To assist in updating translations, a helper script is available in the <a href="https://github.com/bitcoin-core/bitcoin-maintainer-tools">maintainer-tools repo</a>.</p>
@@ -3110,11 +3166,11 @@ git commit
 <li><code>git add</code> new translations from <code>src/qt/locale/</code></li>
 <li>Update <code>src/qt/bitcoin_locale.qrc</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb168"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb168-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb171"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb171-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/        &lt;file alias=&quot;\2&quot;&gt;locale\/\1.qm&lt;\/file&gt;/&#39;</span></a></code></pre></div>
 <ol start="4">
 <li>Update <code>src/Makefile.qt_locale.include</code> manually or via</li>
 </ol>
-<div class="sourceCode" id="cb169"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb169-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
+<div class="sourceCode" id="cb172"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb172-1" title="1"><span class="fu">git</span> ls-files src/qt/locale/*ts<span class="kw">|</span><span class="fu">xargs</span> -n1 basename<span class="kw">|</span><span class="fu">sed</span> <span class="st">&#39;s/\(bitcoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/&#39;</span></a></code></pre></div>
 <p><strong>Do not directly download translations</strong> one by one from the Transifex website, as we do a few post-processing steps before committing the translations.</p>
 <h3 id="handling-plurals-in-source-files">Handling Plurals (in source files)</h3>
 <p>When new plurals are added to the source file, it's important to do the following steps:</p>
@@ -3129,10 +3185,10 @@ git commit
 </ol>
 <h3 id="translating-a-new-language">Translating a new language</h3>
 <p>To create a new language template, you will need to edit the languages manifest file <code>src/qt/bitcoin_locale.qrc</code> and add a new entry. Below is an example of the English language entry.</p>
-<div class="sourceCode" id="cb170"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb170-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb170-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
-<a class="sourceLine" id="cb170-3" title="3">    ...</a>
-<a class="sourceLine" id="cb170-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb173"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb173-1" title="1"><span class="kw">&lt;qresource</span><span class="ot"> prefix=</span><span class="st">&quot;/translations&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb173-2" title="2">    <span class="kw">&lt;file</span><span class="ot"> alias=</span><span class="st">&quot;en&quot;</span><span class="kw">&gt;</span>locale/bitcoin_en.qm<span class="kw">&lt;/file&gt;</span></a>
+<a class="sourceLine" id="cb173-3" title="3">    ...</a>
+<a class="sourceLine" id="cb173-4" title="4"><span class="kw">&lt;/qresource&gt;</span></a></code></pre></div>
 <p><strong>Note:</strong> that the language translation file <strong>must end in <code>.qm</code></strong> (the compiled extension), and not <code>.ts</code>.</p>
 <h3 id="questions-and-general-assistance">Questions and general assistance</h3>
 <p>The Bitcoin-Core translation maintainers include <em>tcatm, seone, Diapolo, wumpus and luke-jr</em>. You can find them, and others, in the Freenode IRC chatroom - <code>irc.freenode.net #bitcoin-core-dev</code>.</p>
