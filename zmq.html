@@ -56,6 +56,10 @@
 <p>These options can also be provided in bitcoin.conf.</p>
 <p>ZeroMQ endpoint specifiers for TCP (and others) are documented in the <a href="http://api.zeromq.org/4-0:_start">ZeroMQ API</a>.</p>
 <p>Client side, then, the ZeroMQ subscriber socket must have the ZMQ_SUBSCRIBE option set to one or either of these prefixes (for instance, just <code>hash</code>); without doing so will result in no messages arriving. Please see <a href="/contrib/zmq/zmq_sub.py"><code>contrib/zmq/zmq_sub.py</code></a> for a working example.</p>
+<p>The ZMQ_PUB socket's ZMQ_TCP_KEEPALIVE option is enabled. This means that the underlying SO_KEEPALIVE option is enabled when using a TCP transport. The effective TCP keepalive values are managed through the underlying operating system configuration and must be configured prior to connection establishment.</p>
+<p>For example, when running on GNU/Linux, one might use the following to lower the keepalive setting to 10 minutes:</p>
+<p>sudo sysctl -w net.ipv4.tcp_keepalive_time=600</p>
+<p>Setting the keepalive values appropriately for your operating environment may improve connectivity in situations where long-lived connections are silently dropped by network middle boxes.</p>
 <h2 id="remarks">Remarks</h2>
 <p>From the perspective of bitcoind, the ZeroMQ socket is write-only; PUB sockets don't even have a read function. Thus, there is no state introduced into bitcoind directly. Furthermore, no information is broadcast that wasn't already received from the public P2P network.</p>
 <p>No authentication or authorization is done on connecting clients; it is assumed that the ZeroMQ port is exposed only to trusted entities, using other means such as firewalling.</p>
