@@ -83,16 +83,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <body>
 <h1 id="openbsd-build-guide">OpenBSD build guide</h1>
 <p>(updated for OpenBSD 6.7)</p>
-<p>This guide describes how to build bitcoind and command-line utilities on OpenBSD.</p>
-<p>OpenBSD is most commonly used as a server OS, so this guide does not contain instructions for building the GUI.</p>
+<p>This guide describes how to build bitcoind, bitcoin-qt, and command-line utilities on OpenBSD.</p>
 <h2 id="preparation">Preparation</h2>
 <p>Run the following as root to install the base dependencies for building:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">pkg_add</span> git gmake libevent libtool boost</a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="ex">pkg_add</span> autoconf <span class="co"># (select highest version, e.g. 2.69)</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="ex">pkg_add</span> automake <span class="co"># (select highest version, e.g. 1.16)</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="ex">pkg_add</span> python <span class="co"># (select highest version, e.g. 3.8)</span></a>
-<a class="sourceLine" id="cb1-5" title="5"></a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
+<a class="sourceLine" id="cb1-2" title="2"><span class="ex">pkg_add</span> qt5 <span class="co"># (optional for enabling the GUI)</span></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="ex">pkg_add</span> autoconf <span class="co"># (select highest version, e.g. 2.69)</span></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="ex">pkg_add</span> automake <span class="co"># (select highest version, e.g. 1.16)</span></a>
+<a class="sourceLine" id="cb1-5" title="5"><span class="ex">pkg_add</span> python <span class="co"># (select highest version, e.g. 3.8)</span></a>
+<a class="sourceLine" id="cb1-6" title="6"></a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
 <p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
 <p><strong>Important</strong>: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is part of the base image, and while building it is necessary to make sure that this compiler is used and not ancient g++ 4.2.1. This is done by appending <code>CC=cc CC_FOR_BUILD=cc CXX=c++</code> to configuration commands. Mixing different compilers within the same executable will result in errors.</p>
 <h3 id="building-berkeleydb">Building BerkeleyDB</h3>
@@ -122,9 +122,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <a class="sourceLine" id="cb5-4" title="4">    MAKE=gmake</a></code></pre></div>
 <p>To configure without wallet:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="ex">./configure</span> --disable-wallet --with-gui=no CC=cc CC_FOR_BUILD=cc CXX=c++ MAKE=gmake</a></code></pre></div>
+<p>To configure with GUI:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="ex">./configure</span> --with-gui=yes CC=cc CXX=c++ \</a>
+<a class="sourceLine" id="cb7-2" title="2">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
+<a class="sourceLine" id="cb7-3" title="3">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
+<a class="sourceLine" id="cb7-4" title="4">    MAKE=gmake</a></code></pre></div>
 <p>Build and run the tests:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="fu">gmake</span> check</a></code></pre></div>
 <h2 id="resource-limits">Resource limits</h2>
 <p>If the build runs into out-of-memory errors, the instructions in this section might help.</p>
 <p>The standard ulimit restrictions in OpenBSD are very strict:</p>
