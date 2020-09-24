@@ -38,6 +38,7 @@
 -zmqpubhashblock=address
 -zmqpubrawblock=address
 -zmqpubrawtx=address
+-zmqpubsequence=address
 </code></pre>
 <p>The socket type is PUB and the address must be a valid ZeroMQ socket address. The same address can be used in more than one notification.</p>
 <p>The option to set the PUB socket's outbound message high water mark (SNDHWM) may be set individually for each notification:</p>
@@ -45,6 +46,7 @@
 -zmqpubhashblockhwm=n
 -zmqpubrawblockhwm=n
 -zmqpubrawtxhwm=n
+-zmqpubsequencehwm=address
 </code></pre>
 <p>The high water mark value must be an integer greater than or equal to 0.</p>
 <p>For instance:</p>
@@ -52,7 +54,13 @@
            -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
            -zmqpubhashtxhwm=10000
 </code></pre>
-<p>Each PUB notification has a topic and body, where the header corresponds to the notification type. For instance, for the notification <code>-zmqpubhashtx</code> the topic is <code>hashtx</code> (no null terminator) and the body is the transaction hash (32 bytes).</p>
+<p>Each PUB notification has a topic and body, where the header corresponds to the notification type. For instance, for the notification <code>-zmqpubhashtx</code> the topic is <code>hashtx</code> (no null terminator) and the body is the transaction hash (32 bytes) for all but <code>sequence</code> topic. For <code>sequence</code>, the body is structured as the following based on the type of message:</p>
+<pre><code>&lt;32-byte hash&gt;C :                 Blockhash connected
+&lt;32-byte hash&gt;D :                 Blockhash disconnected
+&lt;32-byte hash&gt;R&lt;8-byte LE uint&gt; : Transactionhash removed from mempool for non-block inclusion reason
+&lt;32-byte hash&gt;A&lt;8-byte LE uint&gt; : Transactionhash added mempool
+</code></pre>
+<p>Where the 8-byte uints correspond to the mempool sequence number.</p>
 <p>These options can also be provided in bitcoin.conf.</p>
 <p>ZeroMQ endpoint specifiers for TCP (and others) are documented in the <a href="http://api.zeromq.org/4-0:_start">ZeroMQ API</a>.</p>
 <p>Client side, then, the ZeroMQ subscriber socket must have the ZMQ_SUBSCRIBE option set to one or either of these prefixes (for instance, just <code>hash</code>); without doing so will result in no messages arriving. Please see <a href="/contrib/zmq/zmq_sub.py"><code>contrib/zmq/zmq_sub.py</code></a> for a working example.</p>
@@ -63,7 +71,8 @@
 <h2 id="remarks">Remarks</h2>
 <p>From the perspective of bitcoind, the ZeroMQ socket is write-only; PUB sockets don't even have a read function. Thus, there is no state introduced into bitcoind directly. Furthermore, no information is broadcast that wasn't already received from the public P2P network.</p>
 <p>No authentication or authorization is done on connecting clients; it is assumed that the ZeroMQ port is exposed only to trusted entities, using other means such as firewalling.</p>
-<p>Note that when the block chain tip changes, a reorganisation may occur and just the tip will be notified. It is up to the subscriber to retrieve the chain from the last known block to the new tip. Also note that no notification occurs if the tip was in the active chain - this is the case after calling invalidateblock RPC.</p>
+<p>Note that for <code>*block</code> topics, when the block chain tip changes, a reorganisation may occur and just the tip will be notified. It is up to the subscriber to retrieve the chain from the last known block to the new tip. Also note that no notification will occur if the tip was in the active chain--as would be the case after calling invalidateblock RPC. In contrast, the <code>sequence</code> topic publishes all block connections and disconnections.</p>
 <p>There are several possibilities that ZMQ notification can get lost during transmission depending on the communication type you are using. Bitcoind appends an up-counting sequence number to each notification which allows listeners to detect lost notifications.</p>
+<p>The <code>sequence</code> topic refers specifically to the mempool sequence number, which is also published along with all mempool events. This is a different sequence value than in ZMQ itself in order to allow a total ordering of mempool events to be constructed.</p>
 </body>
 </html>
