@@ -40,7 +40,7 @@
 -zmqpubrawtx=address
 -zmqpubsequence=address
 </code></pre>
-<p>The socket type is PUB and the address must be a valid ZeroMQ socket address. The same address can be used in more than one notification.</p>
+<p>The socket type is PUB and the address must be a valid ZeroMQ socket address. The same address can be used in more than one notification. The same notification can be specified more than once.</p>
 <p>The option to set the PUB socket's outbound message high water mark (SNDHWM) may be set individually for each notification:</p>
 <pre><code>-zmqpubhashtxhwm=n
 -zmqpubhashblockhwm=n
@@ -51,6 +51,7 @@
 <p>The high water mark value must be an integer greater than or equal to 0.</p>
 <p>For instance:</p>
 <pre><code>$ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
+           -zmqpubhashtx=tcp://192.168.1.2:28332 \
            -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
            -zmqpubhashtxhwm=10000
 </code></pre>
