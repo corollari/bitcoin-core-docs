@@ -182,7 +182,7 @@
 </tr>
 <tr class="even">
 <td><code>./</code></td>
-<td><code>onion_private_key</code></td>
+<td><code>onion_v3_private_key</code></td>
 <td>Cached Tor onion service private key for <code>-listenonion</code> option</td>
 </tr>
 <tr class="odd">
@@ -284,6 +284,11 @@
 <td><code>addr.dat</code></td>
 <td>Peer IP address BDB database; replaced by <code>peers.dat</code> in <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.html">0.7.0</a></td>
 <td><a href="https://github.com/bitcoin/bitcoin/pull/1198">PR #1198</a>, <a href="https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc"><code>928d3a01</code></a></td>
+</tr>
+<tr class="even">
+<td><code>onion_private_key</code></td>
+<td>Cached Tor onion service private key for <code>-listenonion</code> option. Was used for Tor v2 services; replaced by <code>onion_v3_private_key</code> in <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.html">0.21.0</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/19954">PR #19954</a></td>
 </tr>
 </tbody>
 </table>
