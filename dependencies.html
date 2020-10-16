@@ -161,6 +161,14 @@
 <td></td>
 </tr>
 <tr class="odd">
+<td>SQLite</td>
+<td><a href="https://sqlite.org/download.html">3.32.1</a></td>
+<td><a href="https://github.com/bitcoin/bitcoin/pull/19077">3.7.17</a></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
 <td>XCB</td>
 <td></td>
 <td></td>
@@ -168,7 +176,7 @@
 <td></td>
 <td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a> (Linux only)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>xkbcommon</td>
 <td></td>
 <td></td>
@@ -176,7 +184,7 @@
 <td></td>
 <td><a href="https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk">Yes</a> (Linux only)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ZeroMQ</td>
 <td><a href="https://github.com/zeromq/libzmq/releases">4.3.1</a></td>
 <td>4.0.0</td>
@@ -184,7 +192,7 @@
 <td></td>
 <td></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>zlib</td>
 <td><a href="https://zlib.net/">1.2.11</a></td>
 <td></td>
@@ -200,6 +208,7 @@
 <ul>
 <li>MiniUPnPc is not needed with <code>--with-miniupnpc=no</code>.</li>
 <li>Berkeley DB is not needed with <code>--disable-wallet</code>.</li>
+<li>SQLite is not needed with <code>--disable-wallet</code>.</li>
 <li>Qt is not needed with <code>--without-gui</code>.</li>
 <li>If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass <code>--with-qrencode</code>.</li>
 <li>ZeroMQ is needed only with the <code>--with-zmq</code> option.</li>
