@@ -2003,7 +2003,11 @@ nbproject/
 <ul>
 <li><p><a href="#data-directory-location">Data directory location</a></p></li>
 <li><p><a href="#data-directory-layout">Data directory layout</a></p></li>
-<li><p><a href="#multi-wallet-environment">Multi-wallet environment</a></p></li>
+<li><p><a href="#multi-wallet-environment">Multi-wallet environment</a></p>
+<ul>
+<li><p><a href="#berkeley-db-database-based-wallets">Berkeley DB database based wallets</a></p></li>
+<li><p><a href="#sqlite-database-based-wallets">SQLite database based wallets</a></p></li>
+</ul></li>
 <li><p><a href="#gui-settings">GUI settings</a></p></li>
 <li><p><a href="#legacy-subdirectories-and-files">Legacy subdirectories and files</a></p></li>
 <li><p><a href="#notes">Notes</a></p></li>
@@ -2193,7 +2197,15 @@ nbproject/
 </tbody>
 </table>
 <h2 id="multi-wallet-environment">Multi-wallet environment</h2>
-<p>Wallets are Berkeley DB (BDB) databases:</p>
+<p>Wallets are Berkeley DB (BDB) or SQLite databases.</p>
+<ol>
+<li><p>Each user-defined wallet named "wallet_name" resides in the <code>wallets/wallet_name/</code> subdirectory.</p></li>
+<li><p>The default (unnamed) wallet resides in <code>wallets/</code> subdirectory; if the latter does not exist, the wallet resides in the data directory.</p></li>
+<li><p>A wallet database path can be specified with the <code>-wallet</code> option.</p></li>
+<li><p><code>wallet.dat</code> files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.</p></li>
+<li><p>Any copy or backup of the wallet should be done through a <code>backupwallet</code> call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.</p></li>
+</ol>
+<h3 id="berkeley-db-database-based-wallets">Berkeley DB database based wallets</h3>
 <table>
 <thead>
 <tr class="header">
@@ -2216,27 +2228,37 @@ nbproject/
 <tr class="odd">
 <td><code>./</code></td>
 <td><code>wallet.dat</code></td>
-<td>Personal wallet with keys and transactions. May be either a Berkeley DB or SQLite database file.</td>
+<td>Personal wallet (a BDB database) with keys and transactions</td>
 </tr>
 <tr class="even">
 <td><code>./</code></td>
 <td><code>.walletlock</code></td>
-<td>Wallet lock file</td>
+<td>BDB wallet lock file</td>
 </tr>
+</tbody>
+</table>
+<h3 id="sqlite-database-based-wallets">SQLite database based wallets</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Subdirectory</th>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
 <tr class="odd">
+<td><code>./</code></td>
+<td><code>wallet.dat</code></td>
+<td>Personal wallet (a SQLite database) with keys and transactions</td>
+</tr>
+<tr class="even">
 <td><code>./</code></td>
 <td><code>wallet.dat-journal</code></td>
 <td>SQLite Rollback Journal file for <code>wallet.dat</code>. Usually created at start and deleted on shutdown. A user <em>must keep it as safe</em> as the <code>wallet.dat</code> file.</td>
 </tr>
 </tbody>
 </table>
-<ol>
-<li><p>Each user-defined wallet named "wallet_name" resides in <code>wallets/wallet_name/</code> subdirectory.</p></li>
-<li><p>The default (unnamed) wallet resides in <code>wallets/</code> subdirectory; if the latter does not exist, the wallet resides in the data directory.</p></li>
-<li><p>A wallet database path can be specified by <code>-wallet</code> option.</p></li>
-<li><p><code>wallet.dat</code> files must not be shared across different node instances, as that can result in key-reuse and double-spends due the lack of synchronization between instances.</p></li>
-<li><p>Any copy or backup of the wallet should be done through a <code>backupwallet</code> call in order to update and lock the wallet, preventing any file corruption caused by updates during the copy.</p></li>
-</ol>
 <h2 id="gui-settings">GUI settings</h2>
 <p><code>bitcoin-qt</code> uses <a href="https://doc.qt.io/qt-5/qsettings.html"><code>QSettings</code></a> class; this implies platform-specific <a href="https://doc.qt.io/qt-5/qsettings.html#locations-where-application-settings-are-stored">locations where application settings are stored</a>.</p>
 <h2 id="legacy-subdirectories-and-files">Legacy subdirectories and files</h2>
