@@ -683,7 +683,7 @@ chmod 600 &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&
 <tr class="odd">
 <td>sqlite3</td>
 <td>SQLite DB</td>
-<td>Wallet storage (only needed when wallet enabled)</td>
+<td>Optional, wallet storage (only needed when wallet enabled)</td>
 </tr>
 </tbody>
 </table>
@@ -1098,7 +1098,7 @@ sudo bash -c &quot;echo 1 &gt; /proc/sys/fs/binfmt_misc/status&quot; # Enable WS
 <ul>
 <li>MiniUPnPc is not needed with <code>--with-miniupnpc=no</code>.</li>
 <li>Berkeley DB is not needed with <code>--disable-wallet</code>.</li>
-<li>SQLite is not needed with <code>--disable-wallet</code>.</li>
+<li>SQLite is not needed with <code>--disable-wallet</code> or <code>--without-sqlite</code>.</li>
 <li>Qt is not needed with <code>--without-gui</code>.</li>
 <li>If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass <code>--with-qrencode</code>.</li>
 <li>ZeroMQ is needed only with the <code>--with-zmq</code> option.</li>
