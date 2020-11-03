@@ -111,10 +111,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h4 id="before-branch-off">Before branch-off</h4>
 <ul>
 <li>Update hardcoded <a href="/contrib/seeds/README.html">seeds</a>, see <a href="https://github.com/bitcoin/bitcoin/pull/7415">this pull request</a> for an example.</li>
-<li>Update <a href="/src/chainparams.cpp"><code>src/chainparams.cpp</code></a> m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see <a href="#how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size">this</a> for information on how to calculate them).</li>
-<li>Update <code>src/chainparams.cpp</code> chainTxData with statistics about the transaction count and rate. Use the output of the RPC <code>getchaintxstats</code>, see <a href="https://github.com/bitcoin/bitcoin/pull/17002">this pull request</a> for an example. Reviewers can verify the results by running <code>getchaintxstats &lt;window_block_count&gt; &lt;window_last_block_hash&gt;</code> with the <code>window_block_count</code> and <code>window_last_block_hash</code> from your output.</li>
-<li>Update <code>src/chainparams.cpp</code> nMinimumChainWork with information from the getblockchaininfo rpc.</li>
-<li>Update <code>src/chainparams.cpp</code> defaultAssumeValid with information from the getblockhash rpc.
+<li>Update <a href="/src/chainparams.cpp"><code>src/chainparams.cpp</code></a> m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see <a href="#how-to-calculate-assumed-blockchain-and-chain-state-size">this</a> for information on how to calculate them).</li>
+<li>Update <a href="/src/chainparams.cpp"><code>src/chainparams.cpp</code></a> chainTxData with statistics about the transaction count and rate. Use the output of the <code>getchaintxstats</code> RPC, see <a href="https://github.com/bitcoin/bitcoin/pull/20263">this pull request</a> for an example. Reviewers can verify the results by running <code>getchaintxstats &lt;window_block_count&gt; &lt;window_final_block_hash&gt;</code> with the <code>window_block_count</code> and <code>window_final_block_hash</code> from your output.</li>
+<li>Update <code>src/chainparams.cpp</code> nMinimumChainWork and defaultAssumeValid (and the block height comment) with information from the <code>getblockheader</code> (and <code>getblockhash</code>) RPCs.
 <ul>
 <li>The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.</li>
 <li>Testnet should be set some tens of thousands back from the tip due to reorgs there.</li>
@@ -388,7 +387,7 @@ rm SHA256SUMS
 </ul></li>
 </ul>
 <h3 id="additional-information">Additional information</h3>
-<h4 id="how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size">How to calculate <code>m_assumed_blockchain_size</code> and <code>m_assumed_chain_state_size</code></h4>
+<h4 id="how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size"><a name="how-to-calculate-assumed-blockchain-and-chain-state-size"></a>How to calculate <code>m_assumed_blockchain_size</code> and <code>m_assumed_chain_state_size</code></h4>
 <p>Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain. Note that all values should be taken from a <strong>fully synced</strong> node and have an overhead of 5-10% added on top of its base value.</p>
 <p>To calculate <code>m_assumed_blockchain_size</code>:</p>
 <ul>
