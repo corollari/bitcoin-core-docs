@@ -602,7 +602,7 @@ chmod 600 &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&
 </code></pre>
 <h2 id="notes-1">Notes</h2>
 <ul>
-<li>Tested on OS X 10.12 Sierra through macOS 10.15 Catalina on 64-bit Intel processors only.</li>
+<li>Tested on OS X 10.14 Mojave through macOS 11 Big Sur on 64-bit Intel processors only.</li>
 <li>Building with downloaded Qt binaries is not officially supported. See the notes in <a href="https://github.com/bitcoin/bitcoin/issues/7714">#7714</a>. UNIX BUILD NOTES ==================== Some notes on how to build Bitcoin Core in Unix.</li>
 </ul>
 <p>(For BSD specific instructions, see <code>build-*bsd.html</code> in this directory.)</p>
@@ -658,7 +658,7 @@ chmod 600 &quot;/Users/${USER}/Library/Application Support/Bitcoin/bitcoin.conf&
 <tr class="even">
 <td>libdb4.8</td>
 <td>Berkeley DB</td>
-<td>Wallet storage (only needed when wallet enabled)</td>
+<td>Optional, wallet storage (only needed when wallet enabled)</td>
 </tr>
 <tr class="odd">
 <td>qt</td>
@@ -1097,7 +1097,7 @@ sudo bash -c &quot;echo 1 &gt; /proc/sys/fs/binfmt_misc/status&quot; # Enable WS
 <h4 id="options-passed-to-configure">Options passed to <code>./configure</code></h4>
 <ul>
 <li>MiniUPnPc is not needed with <code>--with-miniupnpc=no</code>.</li>
-<li>Berkeley DB is not needed with <code>--disable-wallet</code>.</li>
+<li>Berkeley DB is not needed with <code>--disable-wallet</code> or <code>--without-bdb</code>.</li>
 <li>SQLite is not needed with <code>--disable-wallet</code> or <code>--without-sqlite</code>.</li>
 <li>Qt is not needed with <code>--without-gui</code>.</li>
 <li>If the qrencode dependency is absent, QR support won't be added. To force an error when that happens, pass <code>--with-qrencode</code>.</li>
