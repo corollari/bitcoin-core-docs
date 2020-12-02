@@ -91,8 +91,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <a class="sourceLine" id="cb1-3" title="3"><span class="ex">pkg_add</span> autoconf <span class="co"># (select highest version, e.g. 2.69)</span></a>
 <a class="sourceLine" id="cb1-4" title="4"><span class="ex">pkg_add</span> automake <span class="co"># (select highest version, e.g. 1.16)</span></a>
 <a class="sourceLine" id="cb1-5" title="5"><span class="ex">pkg_add</span> python <span class="co"># (select highest version, e.g. 3.8)</span></a>
-<a class="sourceLine" id="cb1-6" title="6"></a>
-<a class="sourceLine" id="cb1-7" title="7"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
+<a class="sourceLine" id="cb1-6" title="6"><span class="ex">pkg_add</span> bash</a>
+<a class="sourceLine" id="cb1-7" title="7"></a>
+<a class="sourceLine" id="cb1-8" title="8"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
 <p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
 <p><strong>Important</strong>: From OpenBSD 6.2 onwards a C++11-supporting clang compiler is part of the base image, and while building it is necessary to make sure that this compiler is used and not ancient g++ 4.2.1. This is done by appending <code>CC=cc CC_FOR_BUILD=cc CXX=c++</code> to configuration commands. Mixing different compilers within the same executable will result in errors.</p>
 <h3 id="building-berkeleydb">Building BerkeleyDB</h3>
