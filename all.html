@@ -1421,6 +1421,22 @@ sudo bash -c &quot;echo 1 &gt; /proc/sys/fs/binfmt_misc/status&quot; # Enable WS
 <p>If you are testing something that can run on one machine, run with the <code>-regtest</code> option. In regression test mode, blocks can be created on-demand; see <a href="/test/functional">test/functional/</a> for tests that run in <code>-regtest</code> mode.</p>
 <h3 id="debug_lockorder">DEBUG_LOCKORDER</h3>
 <p>Bitcoin Core is a multi-threaded application, and deadlocks or other multi-threading bugs can be very difficult to track down. The <code>--enable-debug</code> configure option adds <code>-DDEBUG_LOCKORDER</code> to the compiler flags. This inserts run-time checks to keep track of which locks are held and adds warnings to the <code>debug.log</code> file if inconsistencies are detected.</p>
+<h3 id="assertions-and-checks">Assertions and Checks</h3>
+<p>The util file <code>src/util/check.h</code> offers helpers to protect against coding and internal logic bugs. They must never be used to validate user, network or any other input.</p>
+<ul>
+<li><code>assert</code> or <code>Assert</code> should be used to document assumptions when any violation would mean that it is not safe to continue program execution. The code is always compiled with assertions enabled.
+<ul>
+<li>For example, a nullptr dereference or any other logic bug in validation code means the program code is faulty and must terminate immediately.</li>
+</ul></li>
+<li><code>CHECK_NONFATAL</code> should be used for recoverable internal logic bugs. On failure, it will throw an exception, which can be caught to recover from the error.
+<ul>
+<li>For example, a nullptr dereference or any other logic bug in RPC code means that the RPC code is faulty and can not be executed. However, the logic bug can be shown to the user and the program can continue to run.</li>
+</ul></li>
+<li><code>Assume</code> should be used to document assumptions when program execution can safely continue even if the assumption is violated. In debug builds it behaves like <code>Assert</code>/<code>assert</code> to notify developers and testers about nonfatal errors. In production it doesn't warn or log anything, though the expression is always evaluated.
+<ul>
+<li>For example it can be assumed that a variable is only initialized once, but a failed assumption does not result in a fatal bug. A failed assumption may or may not result in a slightly degraded user experience, but it is safe to continue program execution.</li>
+</ul></li>
+</ul>
 <h3 id="valgrind-suppressions-file">Valgrind suppressions file</h3>
 <p>Valgrind is a programming tool for memory debugging, memory leak detection, and profiling. The repo contains a Valgrind suppressions file (<a href="https://github.com/bitcoin/bitcoin/blob/master/contrib/valgrind.supp"><code>valgrind.supp</code></a>) which includes known Valgrind warnings in our dependencies that cannot be fixed in-tree. Example use:</p>
 <pre class="shell"><code>$ valgrind --suppressions=contrib/valgrind.supp src/test/test_bitcoin
