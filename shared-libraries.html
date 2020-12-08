@@ -54,10 +54,11 @@
 <li><code>bitcoinconsensus_ERR_TX_SIZE_MISMATCH</code> - <code>txToLen</code> did not match with the size of <code>txTo</code></li>
 <li><code>bitcoinconsensus_ERR_DESERIALIZE</code> - An error deserializing <code>txTo</code></li>
 <li><code>bitcoinconsensus_ERR_AMOUNT_REQUIRED</code> - Input amount is required if WITNESS is used</li>
+<li><code>bitcoinconsensus_ERR_INVALID_FLAGS</code> - Script verification <code>flags</code> are invalid (i.e. not part of the libconsensus interface)</li>
 </ul>
 <h3 id="example-implementations">Example Implementations</h3>
 <ul>
-<li><a href="https://github.com/NicolasDorier/NBitcoin/blob/master/NBitcoin/Script.cs#L814">NBitcoin</a> (.NET Bindings)</li>
+<li><a href="https://github.com/MetacoSA/NBitcoin/blob/5e1055cd7c4186dee4227c344af8892aea54faec/NBitcoin/Script.cs#L979-#L1031">NBitcoin</a> (.NET Bindings)</li>
 <li><a href="https://github.com/bitpay/node-libbitcoinconsensus">node-libbitcoinconsensus</a> (Node.js Bindings)</li>
 <li><a href="https://github.com/dexX7/java-libbitcoinconsensus">java-libbitcoinconsensus</a> (Java Bindings)</li>
 <li><a href="https://github.com/Bit-Wasp/bitcoinconsensus-php">bitcoinconsensus-php</a> (PHP Bindings)</li>
