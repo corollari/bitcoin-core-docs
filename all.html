@@ -2342,14 +2342,14 @@ nbproject/
 <a class="sourceLine" id="cb117-5" title="5"><span class="co"># macOS users: If you have problem with this step then make sure to read &quot;macOS hints for</span></a>
 <a class="sourceLine" id="cb117-6" title="6"><span class="co"># libFuzzer&quot; on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.html#macos-hints-for-libfuzzer</span></a>
 <a class="sourceLine" id="cb117-7" title="7">$ <span class="fu">make</span></a>
-<a class="sourceLine" id="cb117-8" title="8">$ <span class="ex">src/test/fuzz/process_message</span></a>
+<a class="sourceLine" id="cb117-8" title="8">$ <span class="va">FUZZ=</span>process_message <span class="ex">src/test/fuzz/fuzz</span></a>
 <a class="sourceLine" id="cb117-9" title="9"><span class="co"># abort fuzzing using ctrl-c</span></a></code></pre></div>
 <h2 id="fuzzing-harnesses-fuzzing-output-and-fuzzing-corpora">Fuzzing harnesses, fuzzing output and fuzzing corpora</h2>
 <p><a href="https://github.com/bitcoin/bitcoin/blob/master/src/test/fuzz/process_message.cpp"><code>process_message</code></a> is a fuzzing harness for the <a href="https://github.com/bitcoin/bitcoin/blob/master/src/net_processing.cpp"><code>ProcessMessage(...)</code> function (<code>net_processing</code>)</a>. The available fuzzing harnesses are found in <a href="https://github.com/bitcoin/bitcoin/tree/master/src/test/fuzz"><code>src/test/fuzz/</code></a>.</p>
 <p>The fuzzer will output <code>NEW</code> every time it has created a test input that covers new areas of the code under test. For more information on how to interpret the fuzzer output, see the <a href="https://llvm.org/docs/LibFuzzer.html">libFuzzer documentation</a>.</p>
 <p>If you specify a corpus directory then any new coverage increasing inputs will be saved there:</p>
 <div class="sourceCode" id="cb118"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb118-1" title="1">$ <span class="fu">mkdir</span> -p process_message-seeded-from-thin-air/</a>
-<a class="sourceLine" id="cb118-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> process_message-seeded-from-thin-air/</a>
+<a class="sourceLine" id="cb118-2" title="2">$ <span class="va">FUZZ=</span>process_message <span class="ex">src/test/fuzz/fuzz</span> process_message-seeded-from-thin-air/</a>
 <a class="sourceLine" id="cb118-3" title="3"><span class="ex">INFO</span>: Seed: 840522292</a>
 <a class="sourceLine" id="cb118-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55e121ef9ab8, 0x55e121f613a6),</a>
 <a class="sourceLine" id="cb118-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55e121f613a8,0x55e1225da288),</a>
@@ -2387,7 +2387,7 @@ nbproject/
 <p>The project's collection of seed corpora is found in the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> repo.</p>
 <p>To fuzz <code>process_message</code> using the <a href="https://github.com/bitcoin-core/qa-assets"><code>bitcoin-core/qa-assets</code></a> seed corpus:</p>
 <div class="sourceCode" id="cb119"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb119-1" title="1">$ <span class="fu">git</span> clone https://github.com/bitcoin-core/qa-assets</a>
-<a class="sourceLine" id="cb119-2" title="2">$ <span class="ex">src/test/fuzz/process_message</span> qa-assets/fuzz_seed_corpus/process_message/</a>
+<a class="sourceLine" id="cb119-2" title="2">$ <span class="va">FUZZ=</span>process_message <span class="ex">src/test/fuzz/fuzz</span> qa-assets/fuzz_seed_corpus/process_message/</a>
 <a class="sourceLine" id="cb119-3" title="3"><span class="ex">INFO</span>: Seed: 1346407872</a>
 <a class="sourceLine" id="cb119-4" title="4"><span class="ex">INFO</span>: Loaded 1 modules   (424174 inline 8-bit counters)<span class="bu">:</span> 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),</a>
 <a class="sourceLine" id="cb119-5" title="5"><span class="ex">INFO</span>: Loaded 1 PC tables (424174 PCs)<span class="bu">:</span> 424174 [0x55d8a906c3a8,0x55d8a96e5288),</a>
@@ -2422,7 +2422,7 @@ nbproject/
 <a class="sourceLine" id="cb121-12" title="12"><span class="co"># try compiling using: AFL_NO_X86=1 make</span></a>
 <a class="sourceLine" id="cb121-13" title="13">$ <span class="fu">mkdir</span> -p inputs/ outputs/</a>
 <a class="sourceLine" id="cb121-14" title="14">$ <span class="bu">echo</span> A <span class="op">&gt;</span> inputs/thin-air-input</a>
-<a class="sourceLine" id="cb121-15" title="15">$ <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/bech32</a>
+<a class="sourceLine" id="cb121-15" title="15">$ <span class="va">FUZZ=</span>bech32 <span class="ex">afl/afl-fuzz</span> -i inputs/ -o outputs/ -- src/test/fuzz/fuzz</a>
 <a class="sourceLine" id="cb121-16" title="16"><span class="co"># You may have to change a few kernel parameters to test optimally - afl-fuzz</span></a>
 <a class="sourceLine" id="cb121-17" title="17"><span class="co"># will print an error and suggestion if so.</span></a></code></pre></div>
 <p>Read the <a href="https://github.com/google/afl"><code>afl-fuzz</code> documentation</a> for more information.</p>
@@ -2439,7 +2439,7 @@ nbproject/
 <a class="sourceLine" id="cb122-8" title="8">$ <span class="va">CC=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang <span class="va">CXX=$(</span><span class="bu">pwd</span><span class="va">)</span>/honggfuzz/hfuzz_cc/hfuzz-clang++ <span class="ex">./configure</span> --enable-fuzz --with-sanitizers=address,undefined</a>
 <a class="sourceLine" id="cb122-9" title="9">$ <span class="fu">make</span></a>
 <a class="sourceLine" id="cb122-10" title="10">$ <span class="fu">mkdir</span> -p inputs/</a>
-<a class="sourceLine" id="cb122-11" title="11">$ <span class="ex">honggfuzz/honggfuzz</span> -i inputs/ -- src/test/fuzz/process_message</a></code></pre></div>
+<a class="sourceLine" id="cb122-11" title="11">$ <span class="va">FUZZ=</span>process_message <span class="ex">honggfuzz/honggfuzz</span> -i inputs/ -- src/test/fuzz/fuzz</a></code></pre></div>
 <h1 id="read-the-honggfuzz-documentation-for-more-information-gitian-building">Read the <a href="https://github.com/google/honggfuzz/blob/master/docs/USAGE.html">Honggfuzz documentation</a> for more information. Gitian building</h1>
 <h1 id="this-file-was-moved-to-the-bitcoin-core-documentation-repository-at-httpsgithubcombitcoin-coredocs-sample-init-scripts-and-service-configuration-for-bitcoind">This file was moved to <a href="https://github.com/bitcoin-core/docs/blob/master/gitian-building.html">the Bitcoin Core documentation repository</a> at <a href="https://github.com/bitcoin-core/docs">https://github.com/bitcoin-core/docs</a>. Sample init scripts and service configuration for bitcoind</h1>
 <p>Sample scripts and configuration files for syst.html, Upstart and OpenRC can be found in the contrib/init folder.</p>
