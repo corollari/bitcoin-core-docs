@@ -81,35 +81,155 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <link rel='shortcut icon' href='favicon.png' />
 </head>
 <body>
-<h1 id="freebsd-build-guide">FreeBSD build guide</h1>
-<p>(updated for FreeBSD 12.0)</p>
-<p>This guide describes how to build bitcoind and command-line utilities on FreeBSD.</p>
-<p>This guide does not contain instructions for building the GUI.</p>
-<h2 id="preparation">Preparation</h2>
-<p>You will need the following dependencies, which can be installed as root via pkg:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">pkg</span> install autoconf automake boost-libs git gmake libevent libtool pkgconf</a>
-<a class="sourceLine" id="cb1-2" title="2"></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
-<p>In order to run the test suite (recommended), you will need to have Python 3 installed:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">pkg</span> install python3</a></code></pre></div>
+<h1 id="freebsd-build-guide">FreeBSD Build Guide</h1>
+<p><strong>Updated for FreeBSD <a href="https://www.freebsd.org/releases/12.2R/announce.html">12.2</a></strong></p>
+<p>This guide describes how to build bitcoind, command-line utilities, and GUI on FreeBSD.</p>
+<h2 id="dependencies">Dependencies</h2>
+<p>The following dependencies are <strong>required</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Library</th>
+<th>Purpose</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/autoconf/">autoconf</a></td>
+<td>Build</td>
+<td>Automatically configure software source code</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/automake/">automake</a></td>
+<td>Build</td>
+<td>Generate makefile (requires autoconf)</td>
+</tr>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/libtool/">libtool</a></td>
+<td>Build</td>
+<td>Shared library support</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/pkgconf/">pkgconf</a></td>
+<td>Build</td>
+<td>Configure compiler and linker flags</td>
+</tr>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/git/">git</a></td>
+<td>Clone</td>
+<td>Version control system</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/gmake/">gmake</a></td>
+<td>Compile</td>
+<td>Generate executables</td>
+</tr>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/boost-libs/">boost-libs</a></td>
+<td>Utility</td>
+<td>Library for threading, data structures, etc</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/libevent/">libevent</a></td>
+<td>Networking</td>
+<td>OS independent asynchronous networking</td>
+</tr>
+</tbody>
+</table>
+<p>The following dependencies are <strong>optional</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Library</th>
+<th>Purpose</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/databases/db5/">db5</a></td>
+<td>Berkeley DB</td>
+<td>Wallet storage (only needed when wallet enabled)</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/devel/qt5/">qt5</a></td>
+<td>GUI</td>
+<td>GUI toolkit (only needed when GUI enabled)</td>
+</tr>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/graphics/libqrencode/">libqrencode</a></td>
+<td>QR codes in GUI</td>
+<td>Generating QR codes (only needed when GUI enabled)</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/net/libzmq4/">libzmq4</a></td>
+<td>ZMQ notification</td>
+<td>Allows generating ZMQ notifications (requires ZMQ version &gt;= 4.0.0)</td>
+</tr>
+<tr class="odd">
+<td><a href="https://svnweb.freebsd.org/ports/head/databases/sqlite3/">sqlite3</a></td>
+<td>SQLite DB</td>
+<td>Wallet storage (only needed when wallet enabled)</td>
+</tr>
+<tr class="even">
+<td><a href="https://svnweb.freebsd.org/ports/head/lang/python3/">python3</a></td>
+<td>Testing</td>
+<td>Python Interpreter (only needed when running the test suite)</td>
+</tr>
+</tbody>
+</table>
 <p>See <a href="dependencies.html">dependencies.html</a> for a complete overview.</p>
-<h3 id="building-berkeleydb">Building BerkeleyDB</h3>
-<p>BerkeleyDB is only necessary for the wallet functionality. To skip this, pass <code>--disable-wallet</code> to <code>./configure</code> and skip to the next section.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">./contrib/install_db4.sh</span> <span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span></a>
-<a class="sourceLine" id="cb3-2" title="2"><span class="bu">export</span> <span class="va">BDB_PREFIX=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/db4&quot;</span></a></code></pre></div>
+<h2 id="preparation">Preparation</h2>
+<h3 id="1-install-required-dependencies">1. Install Required Dependencies</h3>
+<p>Install the required dependencies the usual way you <a href="https://www.freebsd.org/doc/en/books/handbook/ports.html">install software on FreeBSD</a> - either with <code>pkg</code> or via the Ports collection. The example commands below use <code>pkg</code> which is usually run as <code>root</code> or via <code>sudo</code>. If you want to use <code>sudo</code>, and you haven't set it up: <a href="http://www.freebsdwiki.net/index.php/Sudo%2C_configuring">use this guide</a> to setup <code>sudo</code> access on FreeBSD.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">pkg</span> install autoconf automake boost-libs git gmake libevent libtool pkgconf</a>
+<a class="sourceLine" id="cb1-2" title="2"></a></code></pre></div>
+<h3 id="2-clone-bitcoin-repo">2. Clone Bitcoin Repo</h3>
+<p>Now that <code>git</code> and all the required dependencies are installed, let's clone the Bitcoin Core repository to a directory. All build scripts and commands will run from this directory.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="fu">git</span> clone https://github.com/bitcoin/bitcoin.git</a></code></pre></div>
+<h3 id="3-install-optional-dependencies">3. Install Optional Dependencies</h3>
+<h4 id="wallet-dependencies">Wallet Dependencies</h4>
+<p>It is not necessary to build wallet functionality to run bitcoind or the GUI. To enable legacy wallets, you must install <code>db5</code>. To enable <a href="https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.html">descriptor wallets</a>, <code>sqlite3</code> is required. Skip <code>db5</code> if you intend to <em>exclusively</em> use descriptor wallets</p>
+<h6 id="legacy-wallet-support">Legacy Wallet Support</h6>
+<p><code>db5</code> is required to enable support for legacy wallets. Skip if you don't intend to use legacy wallets</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">pkg</span> install db5</a></code></pre></div>
+<h6 id="descriptor-wallet-support">Descriptor Wallet Support</h6>
+<p><code>sqlite3</code> is required to enable support for descriptor wallets. Skip if you don't intend to use descriptor wallets.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="ex">pkg</span> install sqlite3</a></code></pre></div>
+<hr />
+<h4 id="gui-dependencies">GUI Dependencies</h4>
+<h6 id="qt5">Qt5</h6>
+<p>Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install <code>qt5</code>. Skip if you don't intend to use the GUI.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="ex">pkg</span> install qt5</a></code></pre></div>
+<h6 id="libqrencode">libqrencode</h6>
+<p>The GUI can encode addresses in a QR Code. To build in QR support for the GUI, install <code>libqrencode</code>. Skip if not using the GUI or don't want QR code functionality.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="ex">pkg</span> install libqrencode</a></code></pre></div>
+<hr />
+<h4 id="test-suite-dependencies">Test Suite Dependencies</h4>
+<p>There is an included test suite that is useful for testing code changes when developing. To run the test suite (recommended), you will need to have Python 3 installed:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="ex">pkg</span> install python3</a></code></pre></div>
+<hr />
 <h2 id="building-bitcoin-core">Building Bitcoin Core</h2>
+<h3 id="1-configuration">1. Configuration</h3>
+<p>There are many ways to configure Bitcoin Core, here are a few common examples:</p>
+<h5 id="wallet-bdb--sqlite-support-no-gui">Wallet (BDB + SQlite) Support, No GUI:</h5>
+<p>This explicitly enables legacy wallet support and disables the GUI. If <code>sqlite3</code> is installed, then descriptor wallet support will be built.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="ex">./configure</span> --with-gui=no --with-incompatible-bdb \</a>
+<a class="sourceLine" id="cb8-3" title="3">    BDB_LIBS=<span class="st">&quot;-ldb_cxx-5&quot;</span> \</a>
+<a class="sourceLine" id="cb8-4" title="4">    BDB_CFLAGS=<span class="st">&quot;-I/usr/local/include/db5&quot;</span> \</a>
+<a class="sourceLine" id="cb8-5" title="5">    MAKE=gmake</a></code></pre></div>
+<h5 id="wallet-only-sqlite-and-gui-support">Wallet (only SQlite) and GUI Support:</h5>
+<p>This explicitly enables the GUI and disables legacy wallet support. If <code>qt5</code> is not installed, this will throw an error. If <code>sqlite3</code> is installed then descriptor wallet functionality will be built. If <code>sqlite3</code> is not installed, then wallet functionality will be disabled.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="ex">./configure</span> --without-bdb --with-gui=yes MAKE=gmake</a></code></pre></div>
+<h5 id="no-wallet-or-gui">No Wallet or GUI</h5>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb10-1" title="1"><span class="ex">./autogen.sh</span></a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="ex">./configure</span> --without-wallet --with-gui=no MAKE=gmake</a></code></pre></div>
+<h3 id="2-compile">2. Compile</h3>
 <p><strong>Important</strong>: Use <code>gmake</code> (the non-GNU <code>make</code> will exit with an error).</p>
-<p>With wallet:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb4-2" title="2"><span class="ex">./configure</span> --with-gui=no \</a>
-<a class="sourceLine" id="cb4-3" title="3">    BDB_LIBS=<span class="st">&quot;-L</span><span class="va">${BDB_PREFIX}</span><span class="st">/lib -ldb_cxx-4.8&quot;</span> \</a>
-<a class="sourceLine" id="cb4-4" title="4">    BDB_CFLAGS=<span class="st">&quot;-I</span><span class="va">${BDB_PREFIX}</span><span class="st">/include&quot;</span> \</a>
-<a class="sourceLine" id="cb4-5" title="5">    MAKE=gmake</a></code></pre></div>
-<p>Without wallet:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="ex">./autogen.sh</span></a>
-<a class="sourceLine" id="cb5-2" title="2"><span class="ex">./configure</span> --with-gui=no --disable-wallet MAKE=gmake</a></code></pre></div>
-<p>followed by:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
-<a class="sourceLine" id="cb6-2" title="2"><span class="fu">gmake</span> check <span class="co"># Run tests if Python 3 is available</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb11-1" title="1"><span class="fu">gmake</span> <span class="co"># use -jX here for parallelism</span></a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="fu">gmake</span> check <span class="co"># Run tests if Python 3 is available</span></a></code></pre></div>
 </body>
 </html>
