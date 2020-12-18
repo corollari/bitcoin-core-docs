@@ -23,6 +23,8 @@
 <p>The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet, and port 18443 for regtest.</p>
 <h2 id="rest-interface-consistency-guarantees">REST Interface consistency guarantees</h2>
 <p>The <a href="/doc/JSON-RPC-interface.html#rpc-consistency-guarantees">same guarantees as for the RPC Interface</a> apply.</p>
+<h2 id="limitations">Limitations</h2>
+<p>There is a known issue in the REST interface that can cause a node to crash if too many http connections are being opened at the same time because the system runs out of available file descriptors. To prevent this from happening you might want to increase the number of maximum allowed file descriptors in your system and try to prevent opening too many connections to your rest interface at the same time if this is under your control. It is hard to give general advice since this depends on your system but if you make several hundred requests at once you are definitely at risk of encountering this issue.</p>
 <h2 id="supported-api">Supported API</h2>
 <h4 id="transactions">Transactions</h4>
 <p><code>GET /rest/tx/&lt;TX-HASH&gt;.&lt;bin|hex|json&gt;</code></p>

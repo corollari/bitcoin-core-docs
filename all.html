@@ -104,7 +104,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="wallet">Wallet</h3>
 <p>The wallet state returned via an RPC is consistent with itself and with the chain state at the time of the call.</p>
 <p>Wallet RPCs will return the latest chain state consistent with prior non-wallet RPCs. The effects of all blocks (and transactions in blocks) at the time of the call is reflected in the state of all wallet transactions. For example, if a block contains transactions that conflicted with mempool transactions, the wallet would reflect the removal of these mempool transactions in the state.</p>
-<h1 id="however-the-wallet-may-not-be-up-to-date-with-the-current-state-of-the-mempool-or-the-state-of-the-mempool-by-an-rpc-that-returned-before-this-rpc-for-example-a-wallet-transaction-that-was-bip-125-replaced-in-the-mempool-prior-to-this-rpc-may-not-yet-be-reflected-as-such-in-this-rpc-response-bitcoin-core">However, the wallet may not be up-to-date with the current state of the mempool or the state of the mempool by an RPC that returned before this RPC. For example, a wallet transaction that was BIP-125-replaced in the mempool prior to this RPC may not yet be reflected as such in this RPC response. Bitcoin Core</h1>
+<p>However, the wallet may not be up-to-date with the current state of the mempool or the state of the mempool by an RPC that returned before this RPC. For example, a wallet transaction that was BIP-125-replaced in the mempool prior to this RPC may not yet be reflected as such in this RPC response.</p>
+<h2 id="limitations">Limitations</h2>
+<h1 id="there-is-a-known-issue-in-the-json-rpc-interface-that-can-cause-a-node-to-crash-if-too-many-http-connections-are-being-opened-at-the-same-time-because-the-system-runs-out-of-available-file-descriptors-to-prevent-this-from-happening-you-might-want-to-increase-the-number-of-maximum-allowed-file-descriptors-in-your-system-and-try-to-prevent-opening-too-many-connections-to-your-json-rpc-interface-at-the-same-time-if-this-is-under-your-control-it-is-hard-to-give-general-advice-since-this-depends-on-your-system-but-if-you-make-several-hundred-requests-at-once-you-are-definitely-at-risk-of-encountering-this-issue-bitcoin-core">There is a known issue in the JSON-RPC interface that can cause a node to crash if too many http connections are being opened at the same time because the system runs out of available file descriptors. To prevent this from happening you might want to increase the number of maximum allowed file descriptors in your system and try to prevent opening too many connections to your JSON-RPC interface at the same time if this is under your control. It is hard to give general advice since this depends on your system but if you make several hundred requests at once you are definitely at risk of encountering this issue. Bitcoin Core</h1>
 <h2 id="setup">Setup</h2>
 <p>Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.</p>
 <p>To download Bitcoin Core, visit <a href="https://bitcoincore.org/en/download/">bitcoincore.org</a>.</p>
@@ -186,6 +188,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet, and port 18443 for regtest.</p>
 <h2 id="rest-interface-consistency-guarantees">REST Interface consistency guarantees</h2>
 <p>The <a href="/doc/JSON-RPC-interface.html#rpc-consistency-guarantees">same guarantees as for the RPC Interface</a> apply.</p>
+<h2 id="limitations-1">Limitations</h2>
+<p>There is a known issue in the REST interface that can cause a node to crash if too many http connections are being opened at the same time because the system runs out of available file descriptors. To prevent this from happening you might want to increase the number of maximum allowed file descriptors in your system and try to prevent opening too many connections to your rest interface at the same time if this is under your control. It is hard to give general advice since this depends on your system but if you make several hundred requests at once you are definitely at risk of encountering this issue.</p>
 <h2 id="supported-api">Supported API</h2>
 <h4 id="transactions">Transactions</h4>
 <p><code>GET /rest/tx/&lt;TX-HASH&gt;.&lt;bin|hex|json&gt;</code></p>
@@ -3249,6 +3253,14 @@ rm SHA256SUMS
 <h1 id="tor-support-in-bitcoin">TOR SUPPORT IN BITCOIN</h1>
 <p>It is possible to run Bitcoin Core as a Tor onion service, and connect to such services.</p>
 <p>The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See <a href="https://www.torproject.org/docs/faq.html.en#TBBSocksPort">Tor Project FAQ:TBBSocksPort</a> for how to properly configure Tor.</p>
+<h2 id="how-to-see-information-about-your-tor-configuration-via-bitcoin-core">How to see information about your Tor configuration via Bitcoin Core</h2>
+<p>There are several ways to see your local onion address in Bitcoin Core:</p>
+<ul>
+<li>in the debug log (grep for "tor:" or "AddLocal")</li>
+<li>in the output of RPC <code>getnetworkinfo</code> in the "localaddresses" section</li>
+<li>in the output of the CLI <code>-netinfo</code> peer connections dashboard</li>
+</ul>
+<p>You may set the <code>-debug=tor</code> config logging option to have additional information in the debug log about your Tor configuration.</p>
 <h2 id="1-run-bitcoin-core-behind-a-tor-proxy">1. Run Bitcoin Core behind a Tor proxy</h2>
 <p>The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all outgoing connections, but more is possible.</p>
 <pre><code>-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -3281,13 +3293,18 @@ rm SHA256SUMS
 HiddenServicePort 8333 127.0.0.1:8334
 </code></pre>
 <p>The directory can be different of course, but virtual port numbers should be equal to your bitcoind's P2P listen port (8333 by default), and target addresses and ports should be equal to binding address and port for inbound Tor connections (127.0.0.1:8334 by default).</p>
-<pre><code>-externalip=X   You can tell bitcoin about its publicly reachable address using
-                this option, and this can be a .onion address. Given the above
-                configuration, you can find your .onion address in
+<pre><code>-externalip=X   You can tell bitcoin about its publicly reachable addresses using
+                this option, and this can be an onion address. Given the above
+                configuration, you can find your onion address in
                 /var/lib/tor/bitcoin-service/hostname. For connections
                 coming from unroutable addresses (such as 127.0.0.1, where the
-                Tor proxy typically runs), .onion addresses are given
+                Tor proxy typically runs), onion addresses are given
                 preference for your node to advertise itself with.
+
+                You can set multiple local addresses with -externalip. The
+                one that will be rumoured to a particular peer is the most
+                compatible one and also using heuristics, e.g. the address
+                with the most incoming connections, etc.
 
 -listen         You&#39;ll need to enable listening for incoming connections, as this
                 is off by default behind a proxy.
@@ -3300,7 +3317,7 @@ HiddenServicePort 8333 127.0.0.1:8334
                 linkable using traffic analysis.
 </code></pre>
 <p>In a typical situation, where you're only reachable via Tor, this should suffice:</p>
-<pre><code>./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+<pre><code>./bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2.htmlgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 </code></pre>
 <p>(obviously, replace the .onion address with your own). It should be noted that you still listen on all devices and another node could establish a clearnet connection, when knowing your address. To mitigate this, additionally bind the address of your Tor proxy:</p>
 <pre><code>./bitcoind ... -bind=127.0.0.1
@@ -3310,7 +3327,7 @@ HiddenServicePort 8333 127.0.0.1:8334
 </code></pre>
 <p>and open port 8333 on your firewall (or use -upnp).</p>
 <p>If you only want to use Tor to reach .onion addresses, but not use it as a proxy for normal IPv4/IPv6 communication, use:</p>
-<pre><code>./bitcoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+<pre><code>./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2.htmlgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 </code></pre>
 <h2 id="3-automatically-create-a-bitcoin-core-onion-service">3. Automatically create a Bitcoin Core onion service</h2>
 <p>Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket API, to create and destroy 'ephemeral' onion services programmatically. Bitcoin Core has been updated to make use of this.</p>
