@@ -392,7 +392,7 @@ nbproject/
 <ul>
 <li><em>Rationale</em>: RPC allows for better automatic testing. The test suite for the GUI is very limited.</li>
 </ul></li>
-<li><p>Make sure pull requests pass Travis CI before merging.</p>
+<li><p>Make sure pull requests pass CI before merging.</p>
 <ul>
 <li><p><em>Rationale</em>: Makes sure that they pass thorough testing, and that the tester will keep passing on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in confusion and mayhem.</p></li>
 <li><p><em>Explanation</em>: If the test suite is to be updated for a change, this has to be done first.</p></li>
@@ -699,7 +699,7 @@ nbproject/
 <p>It is possible for LevelDB changes to inadvertently change consensus compatibility between nodes. This happened in Bitcoin 0.8 (when LevelDB was first introduced). When upgrading LevelDB, you should review the upstream changes to check for issues affecting consensus compatibility.</p>
 <p>For example, if LevelDB had a bug that accidentally prevented a key from being returned in an edge case, and that bug was fixed upstream, the bug "fix" would be an incompatible consensus change. In this situation, the correct behavior would be to revert the upstream fix before applying the updates to Bitcoin's copy of LevelDB. In general, you should be wary of any upstream changes affecting what data is returned from LevelDB queries.</p>
 <h2 id="scripted-diffs">Scripted diffs</h2>
-<p>For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that the result of the script is identical to the commit. This aids reviewers since they can verify that the script does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run on the new master commit).</p>
+<p>For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use scripted-diff commits. The bash script is included in the commit message and our CI job checks that the result of the script is identical to the commit. This aids reviewers since they can verify that the script does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run on the new master commit).</p>
 <p>To create a scripted-diff:</p>
 <ul>
 <li>start the commit message with <code>scripted-diff:</code> (and then a description of the diff on the same line)</li>
